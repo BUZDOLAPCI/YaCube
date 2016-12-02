@@ -1,1 +1,29 @@
-﻿
+﻿  stdafx.cpp
+  initShader.cpp
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\angel.h(63): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(765): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(766): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(767): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(788): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(790): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(793): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(810): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+  hw3.cpp
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\opengl\include\glui.h(868): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\angel.h(63): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(765): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(766): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(767): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(788): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(790): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(793): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(810): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(23): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(31): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(223): warning C4244: '+=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(231): warning C4244: '+=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(247): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(270): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(376): warning C4101: 'spinner2': unreferenced local variable
+  Generating Code...
+  SampleOpenGLProject.vcxproj -> C:\Users\cemaslan\Documents\GitHub\YaCube\Debug\YaCube.exe
