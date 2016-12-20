@@ -1,29 +1,49 @@
-﻿  stdafx.cpp
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (SampleOpenGLProject.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  stdafx.cpp
   initShader.cpp
 c:\users\cemaslan\documents\github\yacube\sampleopenglproject\angel.h(63): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(765): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(766): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(767): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(788): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(790): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(793): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(810): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-  hw3.cpp
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(707): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(708): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(709): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(730): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(732): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(735): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(752): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+  source.cpp
 c:\users\cemaslan\documents\github\yacube\sampleopenglproject\opengl\include\glui.h(868): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
 c:\users\cemaslan\documents\github\yacube\sampleopenglproject\angel.h(63): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(765): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(766): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(767): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(788): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(790): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(793): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(810): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(23): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(31): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(223): warning C4244: '+=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(231): warning C4244: '+=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(247): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(270): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\cemaslan\documents\github\yacube\sampleopenglproject\hw3.cpp(376): warning C4101: 'spinner2': unreferenced local variable
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(707): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(708): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(709): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(730): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(732): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(735): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\mat.h(752): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(21): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(120): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(126): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(157): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(158): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(160): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(170): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(244): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(247): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(256): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(263): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(266): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(267): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(270): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(362): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(364): warning C4305: '-=': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(371): warning C4305: '+=': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(373): warning C4305: '-=': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(378): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(423): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(424): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(438): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(478): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(479): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(480): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\cemaslan\documents\github\yacube\sampleopenglproject\source.cpp(481): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
   Generating Code...
   SampleOpenGLProject.vcxproj -> C:\Users\cemaslan\Documents\GitHub\YaCube\Debug\YaCube.exe

@@ -376,7 +376,7 @@ namespace Angel {
 
 		vec4(const vec4& v) { x = v.x;  y = v.y;  z = v.z;  w = v.w; }
 
-		vec4(const vec3& v, const float s = 1.0) : w(w)
+		vec4(const vec3& v, const float s = 1.0) : w(s)
 		{
 			x = v.x;  y = v.y;  z = v.z;
 		}

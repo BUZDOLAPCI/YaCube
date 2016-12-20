@@ -21,7 +21,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hw3.cpp">
+    <ClCompile Include="source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -51,6 +51,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="teapot.smf" />
+    <None Include="bunny.smf" />
     <None Include="fshader.glsl" />
     <None Include="vshader.glsl" />
   </ItemGroup>
