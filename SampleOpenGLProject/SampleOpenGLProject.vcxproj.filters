@@ -55,5 +55,22 @@
     <None Include="bunny.smf" />
     <None Include="fshader.glsl" />
     <None Include="vshader.glsl" />
+    <None Include="irrKlang.dll" />
+    <None Include="ikpMP3.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Resources\Music\presenting_vvvvvv.mp3" />
+    <Media Include="Resources\Music\start.mp3" />
+    <Media Include="presenting_vvvvvv.mp3" />
+    <Media Include="start.mp3" />
+    <Media Include="hit.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="Resources\Music\hit.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="OpenGL\lib\irrKlang.lib" />
   </ItemGroup>
 </Project>

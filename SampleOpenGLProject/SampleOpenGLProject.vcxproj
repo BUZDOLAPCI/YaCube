@@ -171,8 +171,21 @@
   <ItemGroup>
     <None Include="bunny.smf" />
     <None Include="fshader.glsl" />
+    <None Include="ikpMP3.dll" />
+    <None Include="irrKlang.dll" />
     <None Include="teapot.smf" />
     <None Include="vshader.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="hit.wav" />
+    <Media Include="presenting_vvvvvv.mp3" />
+    <Media Include="Resources\Music\hit.wav" />
+    <Media Include="Resources\Music\presenting_vvvvvv.mp3" />
+    <Media Include="Resources\Music\start.mp3" />
+    <Media Include="start.mp3" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="OpenGL\lib\irrKlang.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

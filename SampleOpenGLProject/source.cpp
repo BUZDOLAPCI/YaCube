@@ -5,29 +5,31 @@
 #include "glew.h"														
 #include "glui.h"														
 #include "freeglut.h"													
-#include "Angel.h"																		//											                                                               .---.
-#include "OpenGL\lib\glm\glm.hpp"														//											                                                              /  .  \
-																						//											                                                             |\_/|   |	
-																						//											                                                             |   |  /|
-using namespace std;																	//											  .----------------------------------------------------------------' |
-using namespace Angel;																	//											 /  .-.                                                              |
-																						//											|  /   \                                                             |
-typedef Angel::vec4  color4;															//											| |\_.  |     _____.___.      _________      ___.                    |
-typedef Angel::vec4  point4;															//											|\|  | /|     \__  |   |____  \_   ___ \ __ _\_ |__   ____           |
-																						//											| `---' |      /   |   \__  \ /    \  \/|  |  \ __ \_/ __ \          |
-int window_id;																			//											|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
-float time;																				//											|       |      / ______(____  /\______  /____/|___  /\___  >         |
-int rotatedAngle=0;																		//											|       |      \/           \/        \/          \/     \/          |
-vec3 playerCubePos = (0, 0, 0);															//											|       |                                                            |
-// Projection transformation parameters													//											|       |                                                           /
-																						//											|       |----------------------------------------------------------'
-GLfloat  ortho_left = -1.0, ortho_right = 1.0;											//											\       |
-GLfloat  ortho_bottom = -1.0, ortho_top = 1.0;											//											 \     /
-GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//											  `---'
+#include "Angel.h"																		
+#include "OpenGL\lib\glm\glm.hpp"														
+#include "irrKlang\irrKlang.h"
+#pragma comment(lib,"irrKlang.lib")																						
+																						//							                                                               .---.
+																						//							                                                             |\_/|   |											                                                             |   |  /|
+using namespace std;																	//							  .----------------------------------------------------------------' |
+using namespace Angel;																	//							 /  .-.                                                              |
+																						//							|  /   \                                                             |
+typedef Angel::vec4  color4;															//							| |\_.  |     _____.___.      _________      ___.                    |
+typedef Angel::vec4  point4;															//							|\|  | /|     \__  |   |____  \_   ___ \ __ _\_ |__   ____           |
+																						//							| `---' |      /   |   \__  \ /    \  \/|  |  \ __ \_/ __ \          |
+int window_id;																			//							|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
+float time;																				//							|       |      / ______(____  /\______  /____/|___  /\___  >         |
+int rotatedAngle=0;																		//							|       |      \/           \/        \/          \/     \/          |
+vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
+// Projection transformation parameters													//							|       |                                                           /
+																						//							|       |----------------------------------------------------------'
+GLfloat  ortho_left = -1.0, ortho_right = 1.0;											//							\       |
+GLfloat  ortho_bottom = -1.0, ortho_top = 1.0;											//							 \     /
+GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
 																						//											
 //point4 points[22754];
 //color4 colors[22754];
-
+irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
 const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
 void initializeUniformVariables(GLuint program);
@@ -35,7 +37,6 @@ mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
 point4 points[NumVertices*50];
 color4 colors[NumVertices*50];
 vec3   normals[NumVertices*50];
-
 char playerCubeMoveDirection;
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 cubeVertices[8] = {
@@ -79,6 +80,7 @@ int Index = 0;
 int numberOfPlatformsOnScene = 0;
 const int sceneSize = 50;
 int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
+bool actionAlreadyDone = false;
 void
 quad(point4 * vertices, int a, int b, int c, int d)
 {
@@ -257,7 +259,7 @@ gridUnitToCoord(int gridUnit)
 }
 
 void
-addPlatformPiece(int gameGridX, int gameGridY)
+addPlatformPiece(int gameGridX, int gameGridY, int type)
 {
 	point4 platformPieceVertices[8] = {
 		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(-0.5, -0.80,  0.5, 1.0),
@@ -271,17 +273,17 @@ addPlatformPiece(int gameGridX, int gameGridY)
 	};
 	point4 * platformPieceVPointer = platformPieceVertices;
 	cubicInitializer(platformPieceVPointer);
-	platformType[gameGridX + sceneSize/2][gameGridY + sceneSize/2] = 1;
+	platformType[gameGridX + sceneSize/2][gameGridY + sceneSize/2] = type;
 	numberOfPlatformsOnScene++;
 }
 
 void
 setStartLevel()
 {
-	addPlatformPiece(-2, -2);	addPlatformPiece(-1, -2);
-								addPlatformPiece(-1, -1); addPlatformPiece(0, -1); addPlatformPiece(1, -1);	addPlatformPiece(2, -1);	addPlatformPiece(3, -1);
-								addPlatformPiece(-1, 0); addPlatformPiece(0, 0); addPlatformPiece(1, 0);	addPlatformPiece(2, 0);	addPlatformPiece(3, 0);	
-								addPlatformPiece(-1, 1); addPlatformPiece(0, 1); addPlatformPiece(1, 1);	addPlatformPiece(2, 1);	addPlatformPiece(3, 1);
+	addPlatformPiece(-2, -2, 3);	addPlatformPiece(-1, -2, 1);
+								addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1);	addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1);
+								addPlatformPiece(-1, 0, 1); addPlatformPiece(0, 0, 1); addPlatformPiece(1, 0, 1);	addPlatformPiece(2, 0, 2);	addPlatformPiece(3, 0, 1);	
+								addPlatformPiece(-1, 1, 1); addPlatformPiece(0, 1, 1); addPlatformPiece(1, 1, 1);	addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);
 }
 
 // OpenGL initialization
@@ -290,8 +292,9 @@ init()
 {
 	point4 * cubeVPointer = cubeVertices;
 	cubicInitializer(cubeVPointer);
-
+	if (!engine)printf("could not start engine"); // 
 	setStartLevel();
+	engine->play2D("presenting_vvvvvv.mp3", true);
 	//SetupSurface();
 	//
 	//load_obj("bunny.smf", bunny_vertices, bunny_faces);
@@ -462,8 +465,21 @@ void
 drawPlatforms() 
 {
 	updateLightProperties(color4(1.0, 1.0, 1.0, 1.0));
-
-	glDrawArrays(GL_TRIANGLES, 36, 36*numberOfPlatformsOnScene);
+	
+	for (int i = 0; i < numberOfPlatformsOnScene; i++)
+	{
+		if (i==0)
+		{
+			updateLightProperties(color4(1.0, 0.0, 0.0, 1.0));
+		}
+		if (i==10)
+		{
+			updateLightProperties(color4(0.0, 1.0, 0.0, 1.0));
+		}
+		
+		glDrawArrays(GL_TRIANGLES, 36 + i*36, 36);
+		updateLightProperties(color4(1.0, 1.0, 1.0, 1.0));
+	}
 }
 
 void
@@ -504,6 +520,7 @@ MoveCube()
 			}
 			playerCubeMoveDirection = 'n';
 			rotatedAngle = 0;
+			engine->play2D("hit.wav");
 		}
 	}
 }
@@ -539,11 +556,27 @@ Respawn()
 	playerCubeMoveDirection = 'n';
 
 }
+void
+InitializeLevel1()
+{
+	updateLightProperties(color4(1.0, 1.0, 0.3984375, 1.0));
+}
 //----------------------------------------------------------------------------
 void
 display(void)
 {
-	
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 2)
+	{
+		InitializeLevel1();
+	}
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] != 2)
+	{
+		updateLightProperties(color4(1.0, 0.0, 0.3984375, 1.0));
+	}
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 3)
+	{
+		exit(EXIT_SUCCESS);
+	}
 	if (platformType[(int)playerCubePos.x + sceneSize/2][(int)playerCubePos.z + sceneSize/2] == 0)
 	{
 		DropCube();
@@ -557,7 +590,6 @@ display(void)
 		sin(verticalAngle),
 		cos(verticalAngle) * cos(horizontalAngle)
 	);
-
 	right_vector = vec3(
 		sin(horizontalAngle - 3.14f / 2.0f),
 		0,
@@ -582,7 +614,7 @@ display(void)
 	mat4  p = Perspective(fovy, aspect, zNear, zFar);
 	glUniformMatrix4fv(projection, 1, GL_TRUE, p);
 	
-	updateLightProperties(color4(1.0, 0.0, 0.0, 1.0));
+	
 	mat4 r = generateRotationMatrix(0,0,0);
 	glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, r);
 	mat4 t = generateTranslationMatrix(0, 0, 0);
@@ -620,7 +652,7 @@ keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
 	case 033: // Escape Key
-	case 'q': case 'Q':
+	case 'q': case 'Q': engine->drop(); // delete engine
 		exit(EXIT_SUCCESS);
 		break;
 	case 'b': bunnyRotation = !bunnyRotation; break;
