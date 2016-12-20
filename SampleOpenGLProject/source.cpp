@@ -32,6 +32,8 @@ GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
 irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
 const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
+float old_t, dt;
+
 void initializeUniformVariables(GLuint program);
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
 point4 points[NumVertices*50];
@@ -149,7 +151,7 @@ vec3 up = cross(right_vector, direction);
 
 
 float speed = 0.1f; // 3 units / second
-float mouseSpeed = 0.005f;
+float mouseSpeed = 0.005f *dt;
 
 int mouseX, mouseY;
 
@@ -290,6 +292,7 @@ setStartLevel()
 void
 init()
 {
+	old_t = glutGet(GLUT_ELAPSED_TIME);
 	point4 * cubeVPointer = cubeVertices;
 	cubicInitializer(cubeVPointer);
 	if (!engine)printf("could not start engine"); // 
@@ -643,6 +646,12 @@ display(void)
 void
 idle(void)
 {
+	int t;
+	/* Delta time in seconds. */
+	t = glutGet(GLUT_ELAPSED_TIME);
+	dt = (t - old_t) / 1000.0;
+	old_t = t;
+	glutPostRedisplay();
 	glutPostRedisplay();
 }
 //----------------------------------------------------------------------------
