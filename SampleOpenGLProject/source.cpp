@@ -31,7 +31,7 @@ GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
 //color4 colors[22754];
 irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
 const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
-
+int timeSinceStart; int deltaTime;
 void initializeUniformVariables(GLuint program);
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
 point4 points[NumVertices*50];
@@ -453,10 +453,10 @@ MoveCube()
 	if (playerCubeMoveDirection == 'R' || playerCubeMoveDirection == 'L' || playerCubeMoveDirection == 'U' || playerCubeMoveDirection == 'D')
 	{
 		switch (playerCubeMoveDirection) {
-		case 'U': playerCubeRotationMatrix = generateRotationMatrix(5, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5-(playerCubePos.z)); break;
-		case 'D': playerCubeRotationMatrix = generateRotationMatrix(-5, 0, 0);  playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, 0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, -0.5 - (playerCubePos.z)); break;
-		case 'R': playerCubeRotationMatrix = generateRotationMatrix(0, 0, -5);  playerCubeTranslationMatrix = generateTranslationMatrix(0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(-0.5 - (playerCubePos.x), 0.5, 0); break;
-		case 'L': playerCubeRotationMatrix = generateRotationMatrix(0, 0, 5); playerCubeTranslationMatrix = generateTranslationMatrix(-0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0.5 - (playerCubePos.x), 0.5, 0); break;
+		case 'U': playerCubeRotationMatrix = generateRotationMatrix(5 * deltaTime, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5-(playerCubePos.z)); break;
+		case 'D': playerCubeRotationMatrix = generateRotationMatrix(-5 * deltaTime, 0, 0);  playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, 0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, -0.5 - (playerCubePos.z)); break;
+		case 'R': playerCubeRotationMatrix = generateRotationMatrix(0, 0, -5 * deltaTime);  playerCubeTranslationMatrix = generateTranslationMatrix(0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(-0.5 - (playerCubePos.x), 0.5, 0); break;
+		case 'L': playerCubeRotationMatrix = generateRotationMatrix(0, 0, 5 * deltaTime); playerCubeTranslationMatrix = generateTranslationMatrix(-0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0.5 - (playerCubePos.x), 0.5, 0); break;
 		}
 
 		for (int i = 0; i < 8; i++)
@@ -471,8 +471,8 @@ MoveCube()
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
 
-		rotatedAngle++;
-		if (rotatedAngle == 90/5)
+		rotatedAngle += 5 * deltaTime;
+		if (rotatedAngle == 90)
 		{
 			switch (playerCubeMoveDirection) {
 			case 'U':  playerCubePos.z--;  break;
@@ -523,10 +523,19 @@ InitializeLevel1()
 {
 	updateLightProperties(color4(1.0, 1.0, 0.3984375, 1.0));
 }
+void
+CalculateDeltaTime()
+{
+	int oldTimeSinceStart = timeSinceStart;
+	timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
+	deltaTime = (timeSinceStart - oldTimeSinceStart)/10;
+	oldTimeSinceStart = timeSinceStart;
+}
 //----------------------------------------------------------------------------
 void
 display(void)
 {
+	CalculateDeltaTime();
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 2)
 	{
 		InitializeLevel1();
