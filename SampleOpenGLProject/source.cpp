@@ -19,7 +19,8 @@ typedef Angel::vec4  point4;															//							|\|  | /|     \__  |   |____
 																						//							| `---' |      /   |   \__  \ /    \  \/|  |  \ __ \_/ __ \          |
 int window_id;																			//							|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
 float time;																				//							|       |      / ______(____  /\______  /____/|___  /\___  >         |
-int rotatedAngle=0;																		//							|       |      \/           \/        \/          \/     \/          |
+int rotatedAngle=0;
+float cubeRotationSpeed = 5;															//							|       |      \/           \/        \/          \/     \/          |
 vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
 // Projection transformation parameters													//							|       |                                                           /
 																						//							|       |----------------------------------------------------------'
@@ -452,11 +453,18 @@ MoveCube()
 	mat4 playerCubeReverseTranslationMatrix;
 	if (playerCubeMoveDirection == 'R' || playerCubeMoveDirection == 'L' || playerCubeMoveDirection == 'U' || playerCubeMoveDirection == 'D')
 	{
+		int angleToRotate = (cubeRotationSpeed * deltaTime/10);
+		
+		if (angleToRotate + rotatedAngle > 90)
+		{
+			angleToRotate = 90 - rotatedAngle;
+		}
+		
 		switch (playerCubeMoveDirection) {
-		case 'U': playerCubeRotationMatrix = generateRotationMatrix(5 * deltaTime, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5-(playerCubePos.z)); break;
-		case 'D': playerCubeRotationMatrix = generateRotationMatrix(-5 * deltaTime, 0, 0);  playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, 0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, -0.5 - (playerCubePos.z)); break;
-		case 'R': playerCubeRotationMatrix = generateRotationMatrix(0, 0, -5 * deltaTime);  playerCubeTranslationMatrix = generateTranslationMatrix(0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(-0.5 - (playerCubePos.x), 0.5, 0); break;
-		case 'L': playerCubeRotationMatrix = generateRotationMatrix(0, 0, 5 * deltaTime); playerCubeTranslationMatrix = generateTranslationMatrix(-0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0.5 - (playerCubePos.x), 0.5, 0); break;
+		case 'U': playerCubeRotationMatrix = generateRotationMatrix(angleToRotate, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5-(playerCubePos.z)); break;
+		case 'D': playerCubeRotationMatrix = generateRotationMatrix(-angleToRotate, 0, 0);  playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, 0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, -0.5 - (playerCubePos.z)); break;
+		case 'R': playerCubeRotationMatrix = generateRotationMatrix(0, 0, -angleToRotate);  playerCubeTranslationMatrix = generateTranslationMatrix(0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(-0.5 - (playerCubePos.x), 0.5, 0); break;
+		case 'L': playerCubeRotationMatrix = generateRotationMatrix(0, 0, angleToRotate); playerCubeTranslationMatrix = generateTranslationMatrix(-0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0.5 - (playerCubePos.x), 0.5, 0); break;
 		}
 
 		for (int i = 0; i < 8; i++)
@@ -471,7 +479,7 @@ MoveCube()
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
 
-		rotatedAngle += 5 * deltaTime;
+		rotatedAngle += angleToRotate;
 		if (rotatedAngle == 90)
 		{
 			switch (playerCubeMoveDirection) {
@@ -489,7 +497,7 @@ MoveCube()
 void
 DropCube()
 {
-	mat4 playerCubeTranslationMatrix = generateTranslationMatrix(0.0,-1.0,0.0);
+	mat4 playerCubeTranslationMatrix = generateTranslationMatrix(0.0,-1.0* deltaTime/20,0.0);
 
 		for (int i = 0; i < 8; i++)
 		{
@@ -528,7 +536,7 @@ CalculateDeltaTime()
 {
 	int oldTimeSinceStart = timeSinceStart;
 	timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
-	deltaTime = (timeSinceStart - oldTimeSinceStart)/10;
+	deltaTime = (timeSinceStart - oldTimeSinceStart);
 	oldTimeSinceStart = timeSinceStart;
 }
 //----------------------------------------------------------------------------
