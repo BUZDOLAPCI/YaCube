@@ -169,11 +169,9 @@
     <ResourceCompile Include="SampleOpenGLProject.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bunny.smf" />
     <None Include="fshader.glsl" />
     <None Include="ikpMP3.dll" />
     <None Include="irrKlang.dll" />
-    <None Include="teapot.smf" />
     <None Include="vshader.glsl" />
   </ItemGroup>
   <ItemGroup>

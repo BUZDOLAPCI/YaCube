@@ -51,8 +51,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="teapot.smf" />
-    <None Include="bunny.smf" />
     <None Include="fshader.glsl" />
     <None Include="vshader.glsl" />
     <None Include="irrKlang.dll" />
