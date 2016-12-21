@@ -19,7 +19,8 @@ typedef Angel::vec4  point4;															//							|\|  | /|     \__  |   |____
 																						//							| `---' |      /   |   \__  \ /    \  \/|  |  \ __ \_/ __ \          |
 int window_id;																			//							|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
 float time;																				//							|       |      / ______(____  /\______  /____/|___  /\___  >         |
-int rotatedAngle=0;																		//							|       |      \/           \/        \/          \/     \/          |
+int rotatedAngle=0;
+float cubeRotationSpeed = 5;															//							|       |      \/           \/        \/          \/     \/          |
 vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
 // Projection transformation parameters													//							|       |                                                           /
 																						//							|       |----------------------------------------------------------'
@@ -31,7 +32,7 @@ GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
 //color4 colors[22754];
 irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
 const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
-
+int timeSinceStart; int deltaTime;
 void initializeUniformVariables(GLuint program);
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
 point4 points[NumVertices*50];
@@ -452,11 +453,18 @@ MoveCube()
 	mat4 playerCubeReverseTranslationMatrix;
 	if (playerCubeMoveDirection == 'R' || playerCubeMoveDirection == 'L' || playerCubeMoveDirection == 'U' || playerCubeMoveDirection == 'D')
 	{
+		int angleToRotate = (cubeRotationSpeed * deltaTime/10);
+		
+		if (angleToRotate + rotatedAngle > 90)
+		{
+			angleToRotate = 90 - rotatedAngle;
+		}
+		
 		switch (playerCubeMoveDirection) {
-		case 'U': playerCubeRotationMatrix = generateRotationMatrix(5, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5-(playerCubePos.z)); break;
-		case 'D': playerCubeRotationMatrix = generateRotationMatrix(-5, 0, 0);  playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, 0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, -0.5 - (playerCubePos.z)); break;
-		case 'R': playerCubeRotationMatrix = generateRotationMatrix(0, 0, -5);  playerCubeTranslationMatrix = generateTranslationMatrix(0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(-0.5 - (playerCubePos.x), 0.5, 0); break;
-		case 'L': playerCubeRotationMatrix = generateRotationMatrix(0, 0, 5); playerCubeTranslationMatrix = generateTranslationMatrix(-0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0.5 - (playerCubePos.x), 0.5, 0); break;
+		case 'U': playerCubeRotationMatrix = generateRotationMatrix(angleToRotate, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5-(playerCubePos.z)); break;
+		case 'D': playerCubeRotationMatrix = generateRotationMatrix(-angleToRotate, 0, 0);  playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, 0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, -0.5 - (playerCubePos.z)); break;
+		case 'R': playerCubeRotationMatrix = generateRotationMatrix(0, 0, -angleToRotate);  playerCubeTranslationMatrix = generateTranslationMatrix(0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(-0.5 - (playerCubePos.x), 0.5, 0); break;
+		case 'L': playerCubeRotationMatrix = generateRotationMatrix(0, 0, angleToRotate); playerCubeTranslationMatrix = generateTranslationMatrix(-0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0.5 - (playerCubePos.x), 0.5, 0); break;
 		}
 
 		for (int i = 0; i < 8; i++)
@@ -471,8 +479,8 @@ MoveCube()
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
 
-		rotatedAngle++;
-		if (rotatedAngle == 90/5)
+		rotatedAngle += angleToRotate;
+		if (rotatedAngle == 90)
 		{
 			switch (playerCubeMoveDirection) {
 			case 'U':  playerCubePos.z--;  break;
@@ -489,7 +497,7 @@ MoveCube()
 void
 DropCube()
 {
-	mat4 playerCubeTranslationMatrix = generateTranslationMatrix(0.0,-1.0,0.0);
+	mat4 playerCubeTranslationMatrix = generateTranslationMatrix(0.0,-1.0* deltaTime/20,0.0);
 
 		for (int i = 0; i < 8; i++)
 		{
@@ -523,10 +531,19 @@ InitializeLevel1()
 {
 	updateLightProperties(color4(1.0, 1.0, 0.3984375, 1.0));
 }
+void
+CalculateDeltaTime()
+{
+	int oldTimeSinceStart = timeSinceStart;
+	timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
+	deltaTime = (timeSinceStart - oldTimeSinceStart);
+	oldTimeSinceStart = timeSinceStart;
+}
 //----------------------------------------------------------------------------
 void
 display(void)
 {
+	CalculateDeltaTime();
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 2)
 	{
 		InitializeLevel1();
