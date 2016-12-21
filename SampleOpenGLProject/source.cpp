@@ -113,17 +113,9 @@ cubicInitializer(point4 * vertices)
 	quad(vertices, 5, 4, 0, 1);
 }
 
-
-vector<glm::vec4> bunny_vertices;
-vector<GLushort> bunny_faces; 
-vector<glm::vec4> teapot_vertices;
-vector<GLushort> teapot_faces;
-
 float radianConstant = 0.0174533;
 int modelIndex = 0;
-bool bunnyRotation = true, teapotRotation = true;
-GLfloat  ThetaBunny = 0.0;
-GLfloat  ThetaTeapot = 0.0;
+
 // position -5.263538, zNear:8.359282, zFar:15.757410,
 vec3 position = vec3(-5.263538, 8.359282, 15.757410);
 float horizontalAngle = 2.825704f;
@@ -295,13 +287,7 @@ init()
 	if (!engine)printf("could not start engine"); // 
 	setStartLevel();
 	engine->play2D("presenting_vvvvvv.mp3", true);
-	//SetupSurface();
-	//
-	//load_obj("bunny.smf", bunny_vertices, bunny_faces);
-	//setModel(bunny_vertices, bunny_faces, color4(0.0, 1.0, 0.0, 1.0));
 
-	//load_obj("teapot.smf", teapot_vertices, teapot_faces);
-	//setModel(teapot_vertices, teapot_faces, color4(0.0, 0.0, 1.0, 1.0));
 
 	// Create a vertex array object
 	GLuint vao;
@@ -355,30 +341,6 @@ initializeUniformVariables(GLuint program) {
 	normal_matrix = glGetUniformLocation(program, "normal_matrix");
 	projection = glGetUniformLocation(program, "projection");
 	trs_matrix = glGetUniformLocation(program, "trs_matrix");
-}
-//----------------------------------------------------------------------------
-
-void
-incrementCounters() {
-
-	if (bunnyRotation == true)
-		ThetaBunny += 0.5*0.05; //rot speed = 0.005
-	if (bunnyRotation == false)
-		ThetaBunny -= 0.5*0.05; //rot speed = 0.005
-
-	if (ThetaBunny > 360.0) {
-		ThetaBunny -= 360.0;
-	}
-
-	if (teapotRotation == true)
-		ThetaTeapot += 0.5*0.05; //rot speed = 0.005
-	if (teapotRotation == false)
-		ThetaTeapot -= 0.5*0.05; //rot speed = 0.005
-
-	if (ThetaTeapot > 360.0) {
-		ThetaTeapot -= 360.0;
-	}
-	time = glutGet(GLUT_ELAPSED_TIME);
 }
 
 //----------------------------------------------------------------------------
@@ -605,8 +567,6 @@ display(void)
 		up                  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 
-	incrementCounters();
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUniformMatrix4fv(model_view, 1, GL_TRUE, mView);
 
@@ -620,19 +580,6 @@ display(void)
 	mat4 t = generateTranslationMatrix(0, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
-	//glDrawArrays(GL_TRIANGLE_FAN, 0, 361); //draw the surface
-
-	//r = generateRotationMatrix(ThetaBunny);
-	//t = generateTranslationMatrix(1.2, 0.5, 0);
-	//glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t*r);
-
-	//glDrawArrays(GL_TRIANGLES, 361, 15000); //draw the bunny
-
-	//t = generateTranslationMatrix(-1.2, 0, 0);
-	//r = generateRotationMatrix(ThetaTeapot);
-	//glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t*r);
-
-	//glDrawArrays(GL_TRIANGLES, 15361, 7392); //draw the teapot
 
 	drawPlatforms();
 
@@ -655,10 +602,6 @@ keyboard(unsigned char key, int x, int y)
 	case 'q': case 'Q': engine->drop(); // delete engine
 		exit(EXIT_SUCCESS);
 		break;
-	case 'b': bunnyRotation = !bunnyRotation; break;
-	case 't': teapotRotation = !teapotRotation ; break;
-	case 'B': bunnyRotation = !bunnyRotation; break;
-	case 'T': teapotRotation = !teapotRotation; break;
 	case 'w': case 'W': if (rotatedAngle == 0) { playerCubeMoveDirection = 'U';} break;
 	case 'a': case 'A': if (rotatedAngle == 0) { playerCubeMoveDirection = 'L';} break;
 	case 's': case 'S': if (rotatedAngle == 0) { playerCubeMoveDirection = 'D';} break;
