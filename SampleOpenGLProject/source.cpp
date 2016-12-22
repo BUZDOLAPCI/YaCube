@@ -660,7 +660,7 @@ keyboard(unsigned char key, int x, int y)
 	case 'd': case 'D': if (rotatedAngle == 0) { playerCubeMoveDirection = 'R';} break;
 	case 'r': case 'R': Respawn(); break;
 	case 'f': printf("verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, position.y, position.z, radius, theta, phi); break;
-
+		/*
 	case ' ':  // reset values to their defaults
 		zNear = 0.5;
 		zFar = 3.0;
@@ -668,7 +668,7 @@ keyboard(unsigned char key, int x, int y)
 		radius = 1.0;
 		theta = 0.0;
 		phi = 0.0;
-		break;
+		break;*/
 	}
 
 	glutPostRedisplay();
