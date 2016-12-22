@@ -79,6 +79,7 @@ color4 vertex_colors[8] = {
 
 int Index = 0;
 int numberOfPlatformsOnScene = 0;
+color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false; bool bTicker = false; bool gTicker = false;
 const int sceneSize = 50;
 int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
 bool actionAlreadyDone = false;
@@ -175,7 +176,6 @@ GLuint diffuseProduct;
 GLuint specularProduct;
 GLuint lightPosition;
 GLuint shininess;
-//int Index = 0;
 
 //----------------------------------------------------------------------------
 void load_obj(const char* filename, vector<glm::vec4> &vertices, vector<GLushort> &elements)
@@ -288,7 +288,7 @@ init()
 	if (!engine)printf("could not start engine"); // 
 	setStartLevel();
 	engine->play2D("presenting_vvvvvv.mp3", true);
-
+	srand(static_cast <unsigned> (glutGet(GLUT_ELAPSED_TIME)));
 
 	// Create a vertex array object
 	GLuint vao;
@@ -509,6 +509,8 @@ DropCube()
 		cubicInitializer(cubeVPointer);
 
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
+
 
 		
 		playerCubeMoveDirection = 'n';
@@ -517,19 +519,50 @@ DropCube()
 void
 Respawn()
 {
-	point4 * cubeVPointer = defaultCubeVertices;
+	std::copy(defaultCubeVertices, defaultCubeVertices + 8, cubeVertices);
+	point4 * cubeVPointer = cubeVertices;
 	Index = 0;
 	cubicInitializer(cubeVPointer);
 	playerCubePos = vec3(0, 0, 0);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
+	currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0);
 	playerCubeMoveDirection = 'n';
 
+}
+float
+OscillateColorElement(float &colorElement, bool &colorTicker) {
+	float colorRandom = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))*deltaTime / 850;
+	if (colorElement+colorRandom > 1)
+	{
+		colorElement = 1;
+		colorTicker = true;
+	}
+	if (colorElement + colorRandom < 0)
+	{
+		colorElement = 0;
+		colorTicker = false;
+	}
+	if (colorTicker == false)
+	{
+		colorElement += colorRandom;
+	}
+	if (colorTicker == true)
+	{
+		colorElement -= colorRandom;
+	}
+	return colorElement;
+}
+void
+RandomizeColor(color4 &color){
+	color.x = OscillateColorElement(color.x, rTicker);
+	color.y = OscillateColorElement(color.y, gTicker);
+	color.z = OscillateColorElement(color.z, bTicker);
 }
 void
 InitializeLevel1()
 {
-	updateLightProperties(color4(1.0, 1.0, 0.3984375, 1.0));
+	RandomizeColor(currentCubeColor);
 }
 void
 CalculateDeltaTime()
@@ -548,10 +581,10 @@ display(void)
 	{
 		InitializeLevel1();
 	}
-	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] != 2)
-	{
-		updateLightProperties(color4(1.0, 0.0, 0.3984375, 1.0));
-	}
+	//if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] != 2)
+	//{
+
+	//}
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 3)
 	{
 		exit(EXIT_SUCCESS);
@@ -564,6 +597,8 @@ display(void)
 	{
 		MoveCube();
 	}
+	updateLightProperties(currentCubeColor);
+
 	direction = vec3(
 		cos(verticalAngle) * sin(horizontalAngle),
 		sin(verticalAngle),
