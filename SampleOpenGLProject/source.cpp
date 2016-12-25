@@ -35,9 +35,12 @@ const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 int timeSinceStart; int deltaTime;
 void initializeUniformVariables(GLuint program);
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
-point4 points[NumVertices*50];
-color4 colors[NumVertices*50];
-vec3   normals[NumVertices*50];
+vector<point4> points;
+vector<color4> colors;
+vector<vec3> normals;
+//point4 points[NumVertices*50];
+//color4 colors[NumVertices*50];			
+//vec3   normals[NumVertices*50];
 char playerCubeMoveDirection;
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 cubeVertices[8] = {
@@ -93,13 +96,13 @@ quad(point4 * vertices, int a, int b, int c, int d)
 
 	vec3 normal = normalize(cross(u, v));
 
-	normals[Index] = normal; colors[Index] = vertex_colors[a]; points[Index] = vertices[a]; Index++;
-	normals[Index] = normal; colors[Index] = vertex_colors[b]; points[Index] = vertices[b]; Index++;
-	normals[Index] = normal; colors[Index] = vertex_colors[c]; points[Index] = vertices[c]; Index++;
-	normals[Index] = normal; colors[Index] = vertex_colors[a]; points[Index] = vertices[a]; Index++;
-	normals[Index] = normal; colors[Index] = vertex_colors[c]; points[Index] = vertices[c]; Index++;
-	normals[Index] = normal; colors[Index] = vertex_colors[d]; points[Index] = vertices[d]; Index++;
-}
+	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);// Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[b]); points.push_back(vertices[b]);// Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);// Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);// Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);// Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[d]); points.push_back(vertices[d]);// Index++;
+}																								 
 
 //----------------------------------------------------------------------------
 
@@ -178,7 +181,7 @@ GLuint lightPosition;
 GLuint shininess;
 
 //----------------------------------------------------------------------------
-void load_obj(const char* filename, vector<glm::vec4> &vertices, vector<GLushort> &elements)
+/*void load_obj(const char* filename, vector<glm::vec4> &vertices, vector<GLushort> &elements)
 {
 	ifstream in(filename, ios::in);
 	if (!in)
@@ -205,32 +208,32 @@ void load_obj(const char* filename, vector<glm::vec4> &vertices, vector<GLushort
 		}
 		else if (line[0] == '#')
 		{
-			/* ignoring this line */
+			// ignoring this line
 		}
 		else
 		{
-			/* ignoring this line */
+			// ignoring this line
 		}
 	}
 
-}
+}*/
 //----------------------------------------------------------------------------
 
-void
+/*void
 setModel(std::vector<glm::vec4> vertices, std::vector<GLushort> faces, color4 color)
 {
 	
 	for each (GLushort element in faces)
 	{
 		glm::vec4 currentPoint = vertices[element];
-		points[modelIndex] = point4(currentPoint.x, currentPoint.y, currentPoint.z, 1.0);
-		colors[modelIndex] = color;
-		modelIndex++;
+		points.push_back(point4(currentPoint.x, currentPoint.y, currentPoint.z, 1.0));
+		colors.push_back(color);
+		//modelIndex++; burdakileri de vector yaptim
 	}
 	printf("%d \n", modelIndex);
-}
+}*/
 
-void
+/*void
 SetupSurface(void) {
 
 	points[modelIndex] = vec4(0.0, 0.0, 0.0 , 1.0); //setting up the vertices for the outer circle which will create the crescent
@@ -242,7 +245,7 @@ SetupSurface(void) {
 	points[modelIndex] = vec4(2.69958878, 0.0, 0.0471215174, 1.0);
 	colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
 	printf("%d \n", modelIndex);
-}
+}*/
 //----------------------------------------------------------------------------
 
 float
@@ -299,11 +302,11 @@ init()
 	GLuint buffer;
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors) + sizeof(normals),
+	glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + normals.size() * sizeof(vec3),
 		NULL, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(points), sizeof(colors), colors);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4), colors.size() * sizeof(vec4), &colors[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 
 	// Load shaders and use the resulting shader program
 	GLuint program = InitShader("vshader.glsl", "fshader.glsl");
@@ -318,12 +321,12 @@ init()
 	GLuint vColor = glGetAttribLocation(program, "vColor");
 	glEnableVertexAttribArray(vColor);
 	glVertexAttribPointer(vColor, 4, GL_FLOAT, GL_FALSE, 0,
-		BUFFER_OFFSET(sizeof(points)));
+		BUFFER_OFFSET(points.size() * sizeof(vec4)));
 
 	GLuint vNormal = glGetAttribLocation(program, "vNormal");
 	glEnableVertexAttribArray(vNormal);
 	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0,
-		BUFFER_OFFSET(sizeof(points)+ sizeof(colors)));
+		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4)));
 
 	initializeUniformVariables(program);
 
@@ -476,8 +479,8 @@ MoveCube()
 		Index = 0;
 		cubicInitializer(cubeVPointer);
 
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 
 		rotatedAngle += angleToRotate;
 		if (rotatedAngle == 90)
@@ -508,8 +511,8 @@ DropCube()
 		Index = 0;
 		cubicInitializer(cubeVPointer);
 
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 
 
 		
@@ -524,8 +527,8 @@ Respawn()
 	Index = 0;
 	cubicInitializer(cubeVPointer);
 	playerCubePos = vec3(0, 0, 0);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), sizeof(normals), normals);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 	currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0);
 	playerCubeMoveDirection = 'n';
 
