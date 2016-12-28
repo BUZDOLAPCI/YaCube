@@ -22,29 +22,68 @@ float time;																				//							|       |      / ______(____  /\______  
 int rotatedAngle=0;
 float cubeRotationSpeed = 5;															//							|       |      \/           \/        \/          \/     \/          |
 vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
+
 // Projection transformation parameters													//							|       |                                                           /
 																						//							|       |----------------------------------------------------------'
 GLfloat  ortho_left = -1.0, ortho_right = 1.0;											//							\       |
 GLfloat  ortho_bottom = -1.0, ortho_top = 1.0;											//							 \     /
 GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
-																						//											
-//point4 points[22754];
-//color4 colors[22754];
+																						//		
+
 irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
+
 const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
-int timeSinceStart; int deltaTime;
+
+// Time variables
+int timeSinceStart; 
+int deltaTime;
+
 void initializeUniformVariables(GLuint program);
+
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
+
+// Vectors for storing color vertex and normal info
+
 vector<point4> points;
 vector<color4> colors;
 vector<vec3> normals;
-//point4 points[NumVertices*50];
-//color4 colors[NumVertices*50];			
-//vec3   normals[NumVertices*50];
+
+
 int playerCubeIndex;
 char playerCubeMoveDirection;
+
+// Flag variables to toggle camera and player movement
 bool freecamToggle = false;
 bool playerMovementLockToggle = false;
+
+
+int Index = 0;
+int numberOfPlatformsOnScene = 0;
+color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false; bool bTicker = false; bool gTicker = false; // Default purple color of the cube and the bool variables needed to tick rgb values
+const int sceneSize = 50;
+int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
+int platformIndex[sceneSize][sceneSize];
+
+
+float radianConstant = 0.0174533; // Radiant constant value, used in rotation matrix generation
+//int modelIndex = 0;  useless variable but used before in the model loading code so can come in handy later
+
+// Variables for camera position, one to keep initial position so we can eeset later and other for moving the camera
+// Inýtial position is -5.263538, zNear:8.359282, zFar:15.757410,
+vec3 cameraPosition = vec3(-5.263538, 8.359282, 15.757410);
+vec3 initialCameraPosition = vec3(-5.263538, 8.359282, 15.757410);
+
+// Camera control variables
+float cameraSpeed = 0.25f; // 7,5 units/second (How fast the cam moves with arrow keys)
+float mouseSpeed = 0.01f; // Mouse senitivity in free cam mode
+int mouseX, mouseY;
+
+
+float horizontalAngle = 2.848656f;
+// vertical angle : look downwards at the plate
+float verticalAngle = -0.446350f;
+
+
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 cubeVertices[8] = {
 	point4(-0.5, -0.5,  0.5, 1.0),
@@ -80,16 +119,10 @@ color4 vertex_colors[8] = {
 	color4(1.0, 0.0, 0.3984375, 1.0)   // cyan
 };
 
+
 // quadInitializer generates two triangles for each face and assigns colors
 //    to the vertices
 
-int Index = 0;
-int numberOfPlatformsOnScene = 0;
-color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false; bool bTicker = false; bool gTicker = false;
-const int sceneSize = 50;
-int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
-int platformIndex[sceneSize][sceneSize];
-bool actionAlreadyDone = false;
 void
 quadInitializer(point4 * vertices, int a, int b, int c, int d)
 {
@@ -151,19 +184,14 @@ cubicUpdater(point4 * vertices, int index)
 	quadUpdater(vertices, 5, 4, 0, 1, index);
 }
 
-float radianConstant = 0.0174533;
-int modelIndex = 0;
 
-// position -5.263538, zNear:8.359282, zFar:15.757410,
-vec3 position = vec3(-5.263538, 8.359282, 15.757410);
-float horizontalAngle = 2.848656f;
-// vertical angle : look downwards at the plate
-float verticalAngle = -0.446350f;
+
 vec3 direction(
 	cos(verticalAngle) * sin(horizontalAngle),
 	sin(verticalAngle),
 	cos(verticalAngle) * cos(horizontalAngle)
 );
+
 
 // Right vector
 vec3 right_vector = vec3(
@@ -175,37 +203,27 @@ vec3 right_vector = vec3(
 // Up vector : perpendicular to both direction and right
 vec3 up = cross(right_vector, direction);
 
-
-
-float speed = 0.1f; // 3 units / second
-float mouseSpeed = 0.005f;
-
-int mouseX, mouseY;
-
 // Viewing transformation parameters
-
 GLfloat radius = 8.000000;
 GLfloat theta = 2.617994;
 GLfloat phi = 0.872665;
 
 const GLfloat  dr = 5.0 * DegreesToRadians;
 
-GLuint  trs_matrix;
-
-GLuint  model_view;  // model-view matrix uniform shader variable location
+GLuint  trs_matrix;		// transformation matrix uniform shader variable location
+GLuint  model_view;		// model-view matrix uniform shader variable location
 GLuint  normal_matrix;  
-					 // Projection transformation parameters
 
-GLfloat  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
-GLfloat  aspect;       // Viewport aspect ratio
+// Projection transformation parameters
+
+GLfloat  fovy = 45.0;	// Field-of-view in Y direction angle (in degrees)
+GLfloat  aspect;		// Viewport aspect ratio
 GLfloat  zNear = 2.670417, zFar = 37.022503;
 
 GLuint  projection; // projection matrix uniform shader variable location
 
-					//----------------------------------------------------------------------------
+// Variables for lighting
 
-					// quadInitializer generates two triangles for each face and assigns colors
-					//    to the vertices
 GLuint ambientProduct;
 GLuint diffuseProduct;
 GLuint specularProduct;
@@ -762,8 +780,8 @@ display(void)
 
 	// Camera matrix
 	mat4 mView = LookAt(
-		position,           // Camera is here
-		position + direction, // and looks here : at the same position, plus "direction"
+		cameraPosition,           // Camera is here
+		cameraPosition + direction, // and looks here : at the same position, plus "direction"
 		up                  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 
@@ -808,7 +826,8 @@ keyboard(unsigned char key, int x, int y)
 	case 'd': case 'D': if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
 	case 'f': case 'F': freecamToggle = !freecamToggle; break;
 	case 'r': case 'R': Respawn(); break;
-	case 'p': printf("horizontalAngle:%f, verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
+	case 'c': cameraPosition = initialCameraPosition; break; // resets camera position to the initial value
+	case 'p': printf("horizontalAngle:%f, verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, verticalAngle, cameraPosition.y, cameraPosition.z, radius, theta, phi); break;
 	}
 
 	glutPostRedisplay();
@@ -819,11 +838,14 @@ void SpecialInput(int key, int x, int y)
 {
 	switch (key)
 	{
-	case GLUT_KEY_UP: if (freecamToggle == true)position += direction * speed; break;
-	case GLUT_KEY_DOWN: if (freecamToggle == true)position -= direction * speed; break;
-	case GLUT_KEY_RIGHT: if (freecamToggle == true)position += right_vector * speed; break;
-	case GLUT_KEY_LEFT: if (freecamToggle == true)position -= right_vector * speed; break;
+	// Move camera with arrow keys when the freecam mode is on
+	case GLUT_KEY_UP: if (freecamToggle == true)cameraPosition += direction * cameraSpeed; break;
+	case GLUT_KEY_DOWN: if (freecamToggle == true)cameraPosition -= direction * cameraSpeed; break;
+	case GLUT_KEY_RIGHT: if (freecamToggle == true)cameraPosition += right_vector * cameraSpeed; break;
+	case GLUT_KEY_LEFT: if (freecamToggle == true)cameraPosition -= right_vector * cameraSpeed; break;
+
 	}
+
 	glutPostRedisplay();
 }
 
