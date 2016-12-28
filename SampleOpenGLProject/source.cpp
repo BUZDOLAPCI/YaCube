@@ -310,14 +310,13 @@ addPlatformPiece(int gameGridX, int gameGridY, int type)
 }
 
 int indexBeforeMetronome;
-
+vec4 cubePosition;
 void addMetronomeCube() {
 	indexBeforeMetronome = Index;
-	vec4 cubePosition = position;
-	// 0.75-1.25 scaling
-	mat4 scalingMat = mat4(	0.3, 0.0, 0.0, 0.0,
-							0.0, 0.3, 0.0, 0.0,
-							0.0, 0.0, 0.3, 0.0,
+	cubePosition = position + direction;
+	mat4 scalingMat = mat4(	0.75, 0.0, 0.0, 0.0,
+							0.0, 0.75, 0.0, 0.0,
+							0.0, 0.0, 0.75, 0.0,
 							0.0, 0.0, 0.0, 1.0);
 	mat4 translationMat = generateTranslationMatrix(cubePosition.x/2, cubePosition.y/2-3, cubePosition.z/2);
 	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
@@ -341,8 +340,9 @@ float scaleMultiplier = 0.75;
 int increasing = 1;
 
 void updateMetronomeCube() {
-	vec4 cubePosition = position + direction;
-	// 0.75-1.25 scaling
+	//Fareye gore hareketini iyilestirmek icin biseyler yapmak lazim burda
+	cubePosition = position + 2*(position-cubePosition)*direction;
+	// 0.75-2 scaling
 	if (scaleMultiplier >= 2) {
 		increasing = 0;
 	}
@@ -360,17 +360,18 @@ void updateMetronomeCube() {
 							0.0, scaleMultiplier, 0.0, 0.0,
 							0.0, 0.0, scaleMultiplier, 0.0,
 							0.0, 0.0, 0.0, 1.0);
-	mat4 translationMat = generateTranslationMatrix(cubePosition.x / 2, cubePosition.y / 2 - 3, cubePosition.z / 2);
+	mat4 translationMat = generateTranslationMatrix(cubePosition.x, cubePosition.y, cubePosition.z);
+	mat4 translationMat2 = generateTranslationMatrix(0, -6, 0);
 	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
 	point4 metronomeCubeVertices[8] = {
-		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5,  0.5, 1.0),
-		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5,  0.5, 1.0),
-		translationMat*rotationMat*scalingMat*point4(0.5,  0.5,  0.5, 1.0),
-		translationMat*rotationMat*scalingMat*point4(0.5, -0.5,  0.5, 1.0),
-		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5, -0.5, 1.0),
-		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5, -0.5, 1.0),
-		translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
-		translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5, -0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5,  0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5,  0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5, -0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5, -0.5, -0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5,  0.5, -0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
 	};
 	/*platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
 	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;*/
