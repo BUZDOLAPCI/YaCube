@@ -35,13 +35,17 @@ const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 int timeSinceStart; int deltaTime;
 void initializeUniformVariables(GLuint program);
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
+mat4 generateRotationMatrix(int x, int y, int z);
 vector<point4> points;
 vector<color4> colors;
 vector<vec3> normals;
 //point4 points[NumVertices*50];
 //color4 colors[NumVertices*50];			
 //vec3   normals[NumVertices*50];
+int playerCubeIndex;
 char playerCubeMoveDirection;
+bool freecamToggle = false;
+bool playerMovementLockToggle = false;
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 cubeVertices[8] = {
 	point4(-0.5, -0.5,  0.5, 1.0),
@@ -77,7 +81,7 @@ color4 vertex_colors[8] = {
 	color4(1.0, 0.0, 0.3984375, 1.0)   // cyan
 };
 
-// quad generates two triangles for each face and assigns colors
+// quadInitializer generates two triangles for each face and assigns colors
 //    to the vertices
 
 int Index = 0;
@@ -85,24 +89,43 @@ int numberOfPlatformsOnScene = 0;
 color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false; bool bTicker = false; bool gTicker = false;
 const int sceneSize = 50;
 int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
+int platformIndex[sceneSize][sceneSize];
 bool actionAlreadyDone = false;
 void
-quad(point4 * vertices, int a, int b, int c, int d)
+quadInitializer(point4 * vertices, int a, int b, int c, int d)
 {
-	// Initialize temporary vectors along the quad's edge to
+	// Initialize temporary vectors along the quadInitializer's edge to
 	//   compute its face normal 
 	vec4 u = vertices[b] - vertices[a];
 	vec4 v = vertices[c] - vertices[b];
 
 	vec3 normal = normalize(cross(u, v));
 
-	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);// Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[b]); points.push_back(vertices[b]);// Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);// Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);// Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);// Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[d]); points.push_back(vertices[d]);// Index++;
-}																								 
+	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]); Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[b]); points.push_back(vertices[b]); Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]); Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]); Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]); Index++;
+	normals.push_back(normal); colors.push_back(vertex_colors[d]); points.push_back(vertices[d]); Index++;
+}
+
+void
+quadUpdater(point4 * vertices, int a, int b, int c, int d, int &index)
+{
+	// Initialize temporary vectors along the quadInitializer's edge to
+	//   compute its face normal 
+	vec4 u = vertices[b] - vertices[a];
+	vec4 v = vertices[c] - vertices[b];
+
+	vec3 normal = normalize(cross(u, v));
+
+	normals[index] = normal; colors[index] = vertex_colors[a]; points[index] = vertices[a]; index++;
+	normals[index] = normal; colors[index] = vertex_colors[b]; points[index] = vertices[b]; index++;
+	normals[index] = normal; colors[index] = vertex_colors[c]; points[index] = vertices[c]; index++;
+	normals[index] = normal; colors[index] = vertex_colors[a]; points[index] = vertices[a]; index++;
+	normals[index] = normal; colors[index] = vertex_colors[c]; points[index] = vertices[c]; index++;
+	normals[index] = normal; colors[index] = vertex_colors[d]; points[index] = vertices[d]; index++;
+}
 
 //----------------------------------------------------------------------------
 
@@ -110,12 +133,23 @@ quad(point4 * vertices, int a, int b, int c, int d)
 void
 cubicInitializer(point4 * vertices)
 {
-	quad(vertices, 1, 0, 3, 2);
-	quad(vertices, 2, 3, 7, 6);
-	quad(vertices, 3, 0, 4, 7);
-	quad(vertices, 6, 5, 1, 2);
-	quad(vertices, 4, 5, 6, 7);
-	quad(vertices, 5, 4, 0, 1);
+	quadInitializer(vertices, 1, 0, 3, 2);
+	quadInitializer(vertices, 2, 3, 7, 6);
+	quadInitializer(vertices, 3, 0, 4, 7);
+	quadInitializer(vertices, 6, 5, 1, 2);
+	quadInitializer(vertices, 4, 5, 6, 7);
+	quadInitializer(vertices, 5, 4, 0, 1);
+}
+
+void
+cubicUpdater(point4 * vertices, int index)
+{
+	quadUpdater(vertices, 1, 0, 3, 2, index);
+	quadUpdater(vertices, 2, 3, 7, 6, index);
+	quadUpdater(vertices, 3, 0, 4, 7, index);
+	quadUpdater(vertices, 6, 5, 1, 2, index);
+	quadUpdater(vertices, 4, 5, 6, 7, index);
+	quadUpdater(vertices, 5, 4, 0, 1, index);
 }
 
 float radianConstant = 0.0174533;
@@ -123,10 +157,9 @@ int modelIndex = 0;
 
 // position -5.263538, zNear:8.359282, zFar:15.757410,
 vec3 position = vec3(-5.263538, 8.359282, 15.757410);
-float horizontalAngle = 2.825704f;
+float horizontalAngle = 2.848656f;
 // vertical angle : look downwards at the plate
-float verticalAngle = -0.4725f;
-
+float verticalAngle = -0.446350f;
 vec3 direction(
 	cos(verticalAngle) * sin(horizontalAngle),
 	sin(verticalAngle),
@@ -172,7 +205,7 @@ GLuint  projection; // projection matrix uniform shader variable location
 
 					//----------------------------------------------------------------------------
 
-					// quad generates two triangles for each face and assigns colors
+					// quadInitializer generates two triangles for each face and assigns colors
 					//    to the vertices
 GLuint ambientProduct;
 GLuint diffuseProduct;
@@ -267,29 +300,135 @@ addPlatformPiece(int gameGridX, int gameGridY, int type)
 		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(0.5,  -0.50, -0.5, 1.0),
 		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(0.5, -0.80, -0.5, 1.0)
 	};
+
+	platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
+	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;
+	
 	point4 * platformPieceVPointer = platformPieceVertices;
 	cubicInitializer(platformPieceVPointer);
-	platformType[gameGridX + sceneSize/2][gameGridY + sceneSize/2] = type;
 	numberOfPlatformsOnScene++;
+}
+
+int indexBeforeMetronome;
+
+void addMetronomeCube() {
+	indexBeforeMetronome = Index;
+	vec4 cubePosition = position;
+	// 0.75-1.25 scaling
+	mat4 scalingMat = mat4(	0.3, 0.0, 0.0, 0.0,
+							0.0, 0.3, 0.0, 0.0,
+							0.0, 0.0, 0.3, 0.0,
+							0.0, 0.0, 0.0, 1.0);
+	mat4 translationMat = generateTranslationMatrix(cubePosition.x/2, cubePosition.y/2-3, cubePosition.z/2);
+	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
+	point4 metronomeCubeVertices[8] = {
+		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5,  0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5, -0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
+	};
+	/*platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
+	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;*/
+
+	point4 * metronomeCubeVPointer = metronomeCubeVertices;
+	cubicInitializer(metronomeCubeVPointer);
+}
+float scaleMultiplier = 0.75;
+int increasing = 1;
+
+void updateMetronomeCube() {
+	vec4 cubePosition = position + direction;
+	// 0.75-1.25 scaling
+	if (scaleMultiplier >= 2) {
+		increasing = 0;
+	}
+	else if (scaleMultiplier <= 0.5) {
+		increasing = 1;
+	}
+
+	if (increasing) {
+		scaleMultiplier += 0.001989*deltaTime;
+	}
+	else {
+		scaleMultiplier -= 0.001989*deltaTime;
+	}
+	mat4 scalingMat = mat4(scaleMultiplier, 0.0, 0.0, 0.0,
+							0.0, scaleMultiplier, 0.0, 0.0,
+							0.0, 0.0, scaleMultiplier, 0.0,
+							0.0, 0.0, 0.0, 1.0);
+	mat4 translationMat = generateTranslationMatrix(cubePosition.x / 2, cubePosition.y / 2 - 3, cubePosition.z / 2);
+	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
+	point4 metronomeCubeVertices[8] = {
+		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5,  0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5, -0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
+	};
+	/*platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
+	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;*/
+
+	point4 * metronomeCubeVPointer = metronomeCubeVertices;
+	cubicUpdater(metronomeCubeVPointer, indexBeforeMetronome);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 }
 
 void
 setStartLevel()
 {
-	addPlatformPiece(-2, -2, 3);	addPlatformPiece(-1, -2, 1);
-								addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1);	addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1);
-								addPlatformPiece(-1, 0, 1); addPlatformPiece(0, 0, 1); addPlatformPiece(1, 0, 1);	addPlatformPiece(2, 0, 2);	addPlatformPiece(3, 0, 1);	
-								addPlatformPiece(-1, 1, 1); addPlatformPiece(0, 1, 1); addPlatformPiece(1, 1, 1);	addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);
-}
 
+
+																																					addPlatformPiece(0, -6, 1);	addPlatformPiece(1, -6, 1);	addPlatformPiece(2, -6, 1);
+																																					addPlatformPiece(0, -5, 1);	addPlatformPiece(1, -5, 4);	addPlatformPiece(2, -5, 1);
+																																					addPlatformPiece(0, -4, 1);	addPlatformPiece(1, -4, 1);	addPlatformPiece(2, -4, 1);
+	addPlatformPiece(-5, -3, 1);addPlatformPiece(-4, -3, 1); addPlatformPiece(-3, -3, 1);																						addPlatformPiece(1, -3, 1);
+	addPlatformPiece(-5, -2, 1);addPlatformPiece(-4, -2, 3); addPlatformPiece(-3, -2, 1); addPlatformPiece(-2, -2, 1);	addPlatformPiece(-1, -2, 1);							addPlatformPiece(1, -2, 1);
+	addPlatformPiece(-5, -1, 1);addPlatformPiece(-4, -1, 1); addPlatformPiece(-3, -1, 1);								addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1);addPlatformPiece(1, -1, 1);	addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1);
+																														addPlatformPiece(-1, 0, 1);	 addPlatformPiece(0, 0, 1);	addPlatformPiece(1, 0, 1);	addPlatformPiece(2, 0, 2);	addPlatformPiece(3, 0, 1);	
+																														addPlatformPiece(-1, 1, 1);	 addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1);	addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);				
+}
+GLuint program;
+void
+updateBuffers() {
+	glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + normals.size() * sizeof(vec3), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4), colors.size() * sizeof(vec4), &colors[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+
+	// set up vertex arrays
+	GLuint vPosition = glGetAttribLocation(program, "vPosition");
+	glEnableVertexAttribArray(vPosition);
+	glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0,
+		BUFFER_OFFSET(0));
+
+	GLuint vColor = glGetAttribLocation(program, "vColor");
+	glEnableVertexAttribArray(vColor);
+	glVertexAttribPointer(vColor, 4, GL_FLOAT, GL_FALSE, 0,
+		BUFFER_OFFSET(points.size() * sizeof(vec4)));
+
+	GLuint vNormal = glGetAttribLocation(program, "vNormal");
+	glEnableVertexAttribArray(vNormal);
+	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0,
+		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4)));
+}
 // OpenGL initialization
 void
 init()
 {
 	point4 * cubeVPointer = cubeVertices;
 	cubicInitializer(cubeVPointer);
+	playerCubeIndex = 0;
 	if (!engine)printf("could not start engine"); // 
 	setStartLevel();
+	addMetronomeCube();
 	engine->play2D("presenting_vvvvvv.mp3", true);
 	srand(static_cast <unsigned> (glutGet(GLUT_ELAPSED_TIME)));
 
@@ -309,7 +448,7 @@ init()
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 
 	// Load shaders and use the resulting shader program
-	GLuint program = InitShader("vshader.glsl", "fshader.glsl");
+	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
 
 	// set up vertex arrays
@@ -386,11 +525,14 @@ generateRotationMatrix(int angleX, int angleY, int angleZ) {
 //----------------------------------------------------------------------------
 void MouseController(int x, int y)
 {
-
+	
 	mouseX = x; 
 	mouseY = y;
-	horizontalAngle += mouseSpeed * 0.01 *float(800 / 2 - mouseX);
-	verticalAngle += mouseSpeed *0.01 *float(800 / 2 - mouseY);
+	if (freecamToggle == true)
+	{
+		horizontalAngle += mouseSpeed * 0.01 *float(800 / 2 - mouseX);
+		verticalAngle += mouseSpeed *0.01 *float(800 / 2 - mouseY);
+	}
 
 	if (x != 800 / 2 || y != 800 / 2)
 		glutWarpPointer(800/2, 800 / 2);
@@ -431,21 +573,27 @@ void
 drawPlatforms() 
 {
 	updateLightProperties(color4(1.0, 1.0, 1.0, 1.0));
-	
-	for (int i = 0; i < numberOfPlatformsOnScene; i++)
+	for (int i = 0; i < sceneSize; i++)
 	{
-		if (i==0)
+		for (int j = 0; j < sceneSize; j++)
 		{
-			updateLightProperties(color4(1.0, 0.0, 0.0, 1.0));
+			switch (platformType[i][j]) {
+			case 0:  break;
+			case 1:  updateLightProperties(color4(1.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // normal platform - white
+			case 2:  updateLightProperties(color4(0.0, 1.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // start - green
+			case 3:  updateLightProperties(color4(1.0, 0.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // exit - red
+			case 4:  updateLightProperties(color4(0.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //color changer - yellow
+			case 5:  updateLightProperties(color4(0.8, 0.8, 0.8, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //normal platform -grey
+			}
 		}
-		if (i==10)
-		{
-			updateLightProperties(color4(0.0, 1.0, 0.0, 1.0));
-		}
-		
-		glDrawArrays(GL_TRIANGLES, 36 + i*36, 36);
-		updateLightProperties(color4(1.0, 1.0, 1.0, 1.0));
 	}
+}
+
+void
+drawMetronomeCube()
+{
+	updateLightProperties(color4(0.3, 0.3, 1.0, 1.0));
+	glDrawArrays(GL_TRIANGLES, indexBeforeMetronome, 36);
 }
 
 void
@@ -476,8 +624,8 @@ MoveCube()
 		}
 
 		point4 * cubeVPointer = cubeVertices;
-		Index = 0;
-		cubicInitializer(cubeVPointer);
+		
+		cubicUpdater(cubeVPointer, playerCubeIndex);
 
 		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
@@ -508,8 +656,7 @@ DropCube()
 		}
 
 		point4 * cubeVPointer = cubeVertices;
-		Index = 0;
-		cubicInitializer(cubeVPointer);
+		cubicUpdater(cubeVPointer, playerCubeIndex);
 
 		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
@@ -524,8 +671,7 @@ Respawn()
 {
 	std::copy(defaultCubeVertices, defaultCubeVertices + 8, cubeVertices);
 	point4 * cubeVPointer = cubeVertices;
-	Index = 0;
-	cubicInitializer(cubeVPointer);
+	cubicUpdater(cubeVPointer, playerCubeIndex);
 	playerCubePos = vec3(0, 0, 0);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
@@ -562,10 +708,43 @@ RandomizeColor(color4 &color){
 	color.y = OscillateColorElement(color.y, gTicker);
 	color.z = OscillateColorElement(color.z, bTicker);
 }
+bool level1Initialized = false;
 void
 InitializeLevel1()
 {
-	RandomizeColor(currentCubeColor);
+	if (level1Initialized == false)
+	{
+
+
+		addPlatformPiece(4, 0, 1); addPlatformPiece(5, 0, 1); addPlatformPiece(6, 0, 1); addPlatformPiece(7, 0, 1); addPlatformPiece(8, 0, 1); addPlatformPiece(9, 0, 1); addPlatformPiece(10, 0, 1);	addPlatformPiece(11, 0, 1);
+																																																		addPlatformPiece(11, 1, 1);
+																																																		addPlatformPiece(11, 2, 1);
+																																																		addPlatformPiece(11, 3, 1);
+																																																		addPlatformPiece(11, 4, 1);
+																																																		addPlatformPiece(11, 5, 1);
+																																																		addPlatformPiece(11, 6, 1);
+																																																		addPlatformPiece(11, 7, 1);
+																																			addPlatformPiece(9, 8, 5);	addPlatformPiece(10, 8, 1);		addPlatformPiece(11, 8, 5);		addPlatformPiece(12, 8, 1);		addPlatformPiece(13, 8, 5);
+																																			addPlatformPiece(9, 9, 1);	addPlatformPiece(10, 9, 5);		addPlatformPiece(11, 9, 1);		addPlatformPiece(12, 9, 5);		addPlatformPiece(13, 9, 1);
+																																			addPlatformPiece(9, 10, 5); addPlatformPiece(10, 10, 1);	addPlatformPiece(11, 10, 5);	addPlatformPiece(12, 10, 1);	addPlatformPiece(13, 10, 5);
+																																			addPlatformPiece(9, 11, 1); addPlatformPiece(10, 11, 5);	addPlatformPiece(11, 11, 1);	addPlatformPiece(12, 11, 5);	addPlatformPiece(13, 11, 1);
+																																			addPlatformPiece(9, 12, 5); addPlatformPiece(10, 12, 1);	addPlatformPiece(11, 12, 5);	addPlatformPiece(12, 12, 1);	addPlatformPiece(13, 12, 5);
+																																			addPlatformPiece(9, 13, 1); addPlatformPiece(10, 13, 5);	addPlatformPiece(11, 13, 1);	addPlatformPiece(12, 13, 5);	addPlatformPiece(13, 13, 1);
+																																			addPlatformPiece(9, 14, 5); addPlatformPiece(10, 14, 1);	addPlatformPiece(11, 14, 5);	addPlatformPiece(12, 14, 1);	addPlatformPiece(13, 14, 5);
+																																			addPlatformPiece(9, 15, 1); addPlatformPiece(10, 15, 5);	addPlatformPiece(11, 15, 1);	addPlatformPiece(12, 15, 5);	addPlatformPiece(13, 15, 1);
+																																			addPlatformPiece(9, 16, 5); addPlatformPiece(10, 16, 1);	addPlatformPiece(11, 16, 5);	addPlatformPiece(12, 16, 1);	addPlatformPiece(13, 16, 5);
+																																			addPlatformPiece(9, 17, 1); addPlatformPiece(10, 17, 5);	addPlatformPiece(11, 17, 1);	addPlatformPiece(12, 17, 5);	addPlatformPiece(13, 17, 1);
+																																			addPlatformPiece(9, 18, 5); addPlatformPiece(10, 18, 1);	addPlatformPiece(11, 18, 5);	addPlatformPiece(12, 18, 1);	addPlatformPiece(13, 18, 5);
+																																			addPlatformPiece(9, 19, 1); addPlatformPiece(10, 19, 5);	addPlatformPiece(11, 19, 1);	addPlatformPiece(12, 19, 5);	addPlatformPiece(13, 19, 1);
+
+
+
+
+
+		updateBuffers();
+		level1Initialized = true;
+	}
+	
 }
 void
 CalculateDeltaTime()
@@ -574,6 +753,45 @@ CalculateDeltaTime()
 	timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
 	deltaTime = (timeSinceStart - oldTimeSinceStart);
 	oldTimeSinceStart = timeSinceStart;
+}
+
+bool turnComplete = false; float anglesTurned = 0; bool turnTicker = false;
+void
+TurnCameraRight()
+{
+	if (turnTicker == false)
+	{
+		if (turnComplete == false)
+		{
+			playerMovementLockToggle = true;
+			horizontalAngle -= 0.001*deltaTime;
+			anglesTurned += 0.001*deltaTime;
+			if (anglesTurned >= 1.33)
+			{
+				playerMovementLockToggle = false;
+				turnComplete = true;
+				anglesTurned = 0;
+				turnTicker = !turnTicker;
+			}
+		}
+	}
+	else
+	{
+		if (turnComplete == false)
+		{
+			playerMovementLockToggle = true;
+			horizontalAngle += 0.001*deltaTime;
+			anglesTurned += 0.001*deltaTime;
+			if (anglesTurned >= 1.33)
+			{
+				playerMovementLockToggle = false;
+				turnComplete = true;
+				anglesTurned = 0;
+				turnTicker = !turnTicker;
+
+			}
+		}
+	}
 }
 //----------------------------------------------------------------------------
 void
@@ -584,10 +802,18 @@ display(void)
 	{
 		InitializeLevel1();
 	}
-	//if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] != 2)
-	//{
-
-	//}
+	if (playerCubePos.x == 11 && playerCubePos.z== 5)
+	{
+		TurnCameraRight();
+	}
+	if (!(playerCubePos.x == 11 && playerCubePos.z == 5))
+	{
+		turnComplete = false;
+	}
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 4)
+	{
+		RandomizeColor(currentCubeColor);
+	}
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 3)
 	{
 		exit(EXIT_SUCCESS);
@@ -637,7 +863,8 @@ display(void)
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	drawPlatforms();
-
+	updateMetronomeCube();
+	drawMetronomeCube();
 	glutSwapBuffers();
 }
 
@@ -657,12 +884,13 @@ keyboard(unsigned char key, int x, int y)
 	case 'q': case 'Q': engine->drop(); // delete engine
 		exit(EXIT_SUCCESS);
 		break;
-	case 'w': case 'W': if (rotatedAngle == 0) { playerCubeMoveDirection = 'U';} break;
-	case 'a': case 'A': if (rotatedAngle == 0) { playerCubeMoveDirection = 'L';} break;
-	case 's': case 'S': if (rotatedAngle == 0) { playerCubeMoveDirection = 'D';} break;
-	case 'd': case 'D': if (rotatedAngle == 0) { playerCubeMoveDirection = 'R';} break;
+	case 'w': case 'W': if (scaleMultiplier < 1.60) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
+	case 'a': case 'A': if (scaleMultiplier < 1.60) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
+	case 's': case 'S': if (scaleMultiplier < 1.60) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
+	case 'd': case 'D': if (scaleMultiplier < 1.60) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
+	case 'f': case 'F': freecamToggle = !freecamToggle; break;
 	case 'r': case 'R': Respawn(); break;
-	case 'f': printf("verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, position.y, position.z, radius, theta, phi); break;
+	case 'p': printf("horizontalAngle:%f, verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
 	}
 
 	glutPostRedisplay();
@@ -673,10 +901,10 @@ void SpecialInput(int key, int x, int y)
 {
 	switch (key)
 	{
-	case GLUT_KEY_UP: position += direction * speed; break;
-	case GLUT_KEY_DOWN: position -= direction * speed; break;
-	case GLUT_KEY_RIGHT: position += right_vector * speed; break;
-	case GLUT_KEY_LEFT: position -= right_vector * speed; break;
+	case GLUT_KEY_UP: if (freecamToggle == true)position += direction * speed; break;
+	case GLUT_KEY_DOWN: if (freecamToggle == true)position -= direction * speed; break;
+	case GLUT_KEY_RIGHT: if (freecamToggle == true)position += right_vector * speed; break;
+	case GLUT_KEY_LEFT: if (freecamToggle == true)position -= right_vector * speed; break;
 	}
 	glutPostRedisplay();
 }
@@ -749,7 +977,7 @@ main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(1280, 720);
-	glutInitContextVersion(3, 2);
+	//glutInitContextVersion(3, 2);
 	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE
 #if _DEBUG		
 		| GLUT_DEBUG
