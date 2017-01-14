@@ -8,6 +8,7 @@
 #include "Angel.h"																		
 #include "OpenGL\lib\glm\glm.hpp"														
 #include "irrKlang\irrKlang.h"
+#include "Bitmap.h"
 #pragma comment(lib,"irrKlang.lib")																						
 //							                                                               .---.
 //							                                                             |\_/|   |											                                                             |   |  /|
@@ -19,10 +20,10 @@ typedef Angel::vec4  point4;															//							|\|  | /|     \__  |   |____
 																						//							| `---' |      /   |   \__  \ /    \  \/|  |  \ __ \_/ __ \          |
 int window_id;																			//							|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
 float time;																				//							|       |      / ______(____  /\______  /____/|___  /\___  >         |
-int rotatedAngle = 0;																		//							|		|															 |
+int rotatedAngle = 0;																	//							|		|															 |
 float cubeRotationSpeed = 5;															//							|       |      \/           \/        \/          \/     \/          |
 vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
-																						// Projection transformation parameters													//							|       |                                                           /
+																						//												//							|       |                                                           /
 																						//							|       |----------------------------------------------------------'
 GLfloat  ortho_left = -1.0, ortho_right = 1.0;											//							\       |
 GLfloat  ortho_bottom = -1.0, ortho_top = 1.0;											//							 \     /
@@ -294,6 +295,7 @@ gridUnitToCoord(int gridUnit)
 	return gridUnit;
 }
 
+
 void
 addPlatformPiece(int gameGridX, int gameGridY, int type)
 {
@@ -529,9 +531,38 @@ updateBuffers() {
 int bb8Index;
 int bb8VCount;
 // OpenGL initialization
+GLuint flagTexture; // texture variable
 void
 init()
 {
+	//-------------------------- L O A D  B M P ----------------------------------//
+
+	// load flag texture
+	Bitmap *image;
+
+	image = new Bitmap();
+
+	// load to gpu memory
+	if (image->loadBMP("flag.bmp")) {
+		glGenTextures(1, &flagTexture);
+
+		glBindTexture(GL_TEXTURE_2D, flagTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, 3, image->width, image->height, 0,
+			GL_RGB, GL_UNSIGNED_BYTE, image->data);
+	}
+	else {
+		std::cout << "Failed to load texture. \n";
+	}
+
+	// unload from system memory
+	if (image) {
+		delete image;
+	}
+
+	//-----------------------------------------------------------//
+
 	point4 * cubeVPointer = cubeVertices;
 	cubicInitializer(cubeVPointer);
 	playerCubeIndex = 0;

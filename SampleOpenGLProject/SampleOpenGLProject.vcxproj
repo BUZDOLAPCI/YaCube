@@ -153,12 +153,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Bitmap.cpp" />
     <ClCompile Include="source.cpp" />
     <ClCompile Include="initShader.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Angel.h" />
+    <ClInclude Include="Bitmap.h" />
     <ClInclude Include="mat.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -187,10 +189,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="level1.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="bb8.obj" />
-    <Object Include="Stormtrooper.obj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

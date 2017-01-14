@@ -24,6 +24,9 @@
     <ClCompile Include="source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Bitmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Angel.h">
@@ -43,6 +46,9 @@
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bitmap.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -73,9 +79,5 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="level1.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="bb8.obj" />
-    <Object Include="Stormtrooper.obj" />
   </ItemGroup>
 </Project>
