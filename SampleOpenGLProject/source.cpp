@@ -9,8 +9,8 @@
 #include "OpenGL\lib\glm\glm.hpp"														
 #include "irrKlang\irrKlang.h"
 #pragma comment(lib,"irrKlang.lib")																						
-																						//							                                                               .---.
-																						//							                                                             |\_/|   |											                                                             |   |  /|
+//							                                                               .---.
+//							                                                             |\_/|   |											                                                             |   |  /|
 using namespace std;																	//							  .----------------------------------------------------------------' |
 using namespace Angel;																	//							 /  .-.                                                              |
 																						//							|  /   \                                                             |
@@ -19,71 +19,33 @@ typedef Angel::vec4  point4;															//							|\|  | /|     \__  |   |____
 																						//							| `---' |      /   |   \__  \ /    \  \/|  |  \ __ \_/ __ \          |
 int window_id;																			//							|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
 float time;																				//							|       |      / ______(____  /\______  /____/|___  /\___  >         |
-int rotatedAngle=0;
+int rotatedAngle = 0;																		//							|		|															 |
 float cubeRotationSpeed = 5;															//							|       |      \/           \/        \/          \/     \/          |
 vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
-
-// Projection transformation parameters													//							|       |                                                           /
+																						// Projection transformation parameters													//							|       |                                                           /
 																						//							|       |----------------------------------------------------------'
 GLfloat  ortho_left = -1.0, ortho_right = 1.0;											//							\       |
 GLfloat  ortho_bottom = -1.0, ortho_top = 1.0;											//							 \     /
 GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
-																						//		
-
+																						//											
+																						//point4 points[22754];
+																						//color4 colors[22754];
 irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
-
-const int NumVertices = 36*2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
-
-// Time variables
-int timeSinceStart; 
-int deltaTime;
-
+const int NumVertices = 36 * 2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
+int timeSinceStart; int deltaTime;
 void initializeUniformVariables(GLuint program);
-
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
-
-// Vectors for storing color vertex and normal info
-
+mat4 generateRotationMatrix(int x, int y, int z);
 vector<point4> points;
 vector<color4> colors;
 vector<vec3> normals;
-
-
+//point4 points[NumVertices*50];
+//color4 colors[NumVertices*50];			
+//vec3   normals[NumVertices*50];
 int playerCubeIndex;
 char playerCubeMoveDirection;
-
-// Flag variables to toggle camera and player movement
 bool freecamToggle = false;
 bool playerMovementLockToggle = false;
-
-
-int Index = 0;
-int numberOfPlatformsOnScene = 0;
-color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false; bool bTicker = false; bool gTicker = false; // Default purple color of the cube and the bool variables needed to tick rgb values
-const int sceneSize = 50;
-int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
-int platformIndex[sceneSize][sceneSize];
-
-
-float radianConstant = 0.0174533; // Radiant constant value, used in rotation matrix generation
-//int modelIndex = 0;  useless variable but used before in the model loading code so can come in handy later
-
-// Variables for camera position, one to keep initial position so we can eeset later and other for moving the camera
-// Inýtial position is -5.263538, zNear:8.359282, zFar:15.757410,
-vec3 cameraPosition = vec3(-5.263538, 8.359282, 15.757410);
-vec3 initialCameraPosition = vec3(-5.263538, 8.359282, 15.757410);
-
-// Camera control variables
-float cameraSpeed = 0.25f; // 7,5 units/second (How fast the cam moves with arrow keys)
-float mouseSpeed = 0.01f; // Mouse senitivity in free cam mode
-int mouseX, mouseY;
-
-
-float horizontalAngle = 2.848656f;
-// vertical angle : look downwards at the plate
-float verticalAngle = -0.446350f;
-
-
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 cubeVertices[8] = {
 	point4(-0.5, -0.5,  0.5, 1.0),
@@ -95,6 +57,7 @@ point4 cubeVertices[8] = {
 	point4(0.5,  0.5, -0.5, 1.0),
 	point4(0.5, -0.5, -0.5, 1.0)
 };
+
 
 point4 defaultCubeVertices[8] = {
 	point4(-0.5, -0.5,  0.5, 1.0),
@@ -119,10 +82,16 @@ color4 vertex_colors[8] = {
 	color4(1.0, 0.0, 0.3984375, 1.0)   // cyan
 };
 
-
 // quadInitializer generates two triangles for each face and assigns colors
 //    to the vertices
 
+
+int numberOfPlatformsOnScene = 0;
+color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false; bool bTicker = false; bool gTicker = false;
+const int sceneSize = 50;
+int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
+int platformIndex[sceneSize][sceneSize];
+bool actionAlreadyDone = false;
 void
 quadInitializer(point4 * vertices, int a, int b, int c, int d)
 {
@@ -132,13 +101,13 @@ quadInitializer(point4 * vertices, int a, int b, int c, int d)
 	vec4 v = vertices[c] - vertices[b];
 
 	vec3 normal = normalize(cross(u, v));
-
-	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]); Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[b]); points.push_back(vertices[b]); Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]); Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]); Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]); Index++;
-	normals.push_back(normal); colors.push_back(vertex_colors[d]); points.push_back(vertices[d]); Index++;
+	int sizeV = points.size();
+	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);
+	normals.push_back(normal); colors.push_back(vertex_colors[b]); points.push_back(vertices[b]);
+	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);
+	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);
+	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);
+	normals.push_back(normal); colors.push_back(vertex_colors[d]); points.push_back(vertices[d]);
 }
 
 void
@@ -184,46 +153,58 @@ cubicUpdater(point4 * vertices, int index)
 	quadUpdater(vertices, 5, 4, 0, 1, index);
 }
 
+float radianConstant = 0.0174533;
+int modelIndex = 0;
 
-
-vec3 direction(
-	cos(verticalAngle) * sin(horizontalAngle),
-	sin(verticalAngle),
-	cos(verticalAngle) * cos(horizontalAngle)
-);
-
+// position -5.263538, zNear:8.359282, zFar:15.757410,
+vec3 position = vec3(-5.263538, 8.359282, 15.757410);
+vec3 initialPosition = vec3(-5.263538, 8.359282, 15.757410);
+float horizontalAngle = 2.848656f;
+float initialHorizontalAngle = 2.848656f;
+// vertical angle : look downwards at the plate
+float verticalAngle = -0.446350f;
+float initialVerticalAngle = -0.446350f;
+vec3 direction;
 
 // Right vector
-vec3 right_vector = vec3(
-	sin(horizontalAngle - 3.14f / 2.0f),
-	0,
-	cos(horizontalAngle - 3.14f / 2.0f)
-);
+vec3 right_vector;
+
 
 // Up vector : perpendicular to both direction and right
 vec3 up = cross(right_vector, direction);
 
+
+
+float speed = 0.3f; // 3 units / second
+float mouseSpeed = 0.005f;
+
+int mouseX, mouseY;
+
 // Viewing transformation parameters
+
 GLfloat radius = 8.000000;
 GLfloat theta = 2.617994;
 GLfloat phi = 0.872665;
 
 const GLfloat  dr = 5.0 * DegreesToRadians;
 
-GLuint  trs_matrix;		// transformation matrix uniform shader variable location
-GLuint  model_view;		// model-view matrix uniform shader variable location
-GLuint  normal_matrix;  
+GLuint  trs_matrix;
 
+GLuint  model_view;  // model-view matrix uniform shader variable location
+GLuint  normal_matrix;
+GLuint eye_position;
 // Projection transformation parameters
 
-GLfloat  fovy = 45.0;	// Field-of-view in Y direction angle (in degrees)
-GLfloat  aspect;		// Viewport aspect ratio
+GLfloat  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
+GLfloat  aspect;       // Viewport aspect ratio
 GLfloat  zNear = 2.670417, zFar = 37.022503;
 
 GLuint  projection; // projection matrix uniform shader variable location
 
-// Variables for lighting
+					//----------------------------------------------------------------------------
 
+					// quadInitializer generates two triangles for each face and assigns colors
+					//    to the vertices
 GLuint ambientProduct;
 GLuint diffuseProduct;
 GLuint specularProduct;
@@ -233,68 +214,77 @@ GLuint shininess;
 //----------------------------------------------------------------------------
 /*void load_obj(const char* filename, vector<glm::vec4> &vertices, vector<GLushort> &elements)
 {
-	ifstream in(filename, ios::in);
-	if (!in)
-	{
-		cerr << "Cannot open " << filename << endl; exit(1);
-	}
+ifstream in(filename, ios::in);
+if (!in)
+{
+cerr << "Cannot open " << filename << endl; exit(1);
+}
 
-	string line;
-	while (getline(in, line))
-	{
-		if (line.substr(0, 2) == "v ")
-		{
-			istringstream s(line.substr(2));
-			glm::vec4 v; s >> v.x; s >> v.y; s >> v.z; v.w = 1.0f;
-			vertices.push_back(v);
-		}
-		else if (line.substr(0, 2) == "f ")
-		{
-			istringstream s(line.substr(2));
-			GLushort a, b, c;
-			s >> a; s >> b; s >> c;
-			a--; b--; c--;
-			elements.push_back(a); elements.push_back(b); elements.push_back(c);
-		}
-		else if (line[0] == '#')
-		{
-			// ignoring this line
-		}
-		else
-		{
-			// ignoring this line
-		}
-	}
+string line;
+while (getline(in, line))
+{
+if (line.substr(0, 2) == "v ")
+{
+istringstream s(line.substr(2));
+glm::vec4 v; s >> v.x; s >> v.y; s >> v.z; v.w = 1.0f;
+vertices.push_back(v);
+}
+else if (line.substr(0, 2) == "f ")
+{
+istringstream s(line.substr(2));
+GLushort a, b, c;
+s >> a; s >> b; s >> c;
+a--; b--; c--;
+elements.push_back(a); elements.push_back(b); elements.push_back(c);
+}
+else if (line[0] == '#')
+{
+// ignoring this line
+}
+else
+{
+// ignoring this line
+}
+}
 
 }*/
+
+mat4
+generateScaleMatrix(float scaleCoefficient) {
+	return mat4(scaleCoefficient, 0.0, 0.0, 0.0,
+		0.0, scaleCoefficient, 0.0, 0.0,
+		0.0, 0.0, scaleCoefficient, 0.0,
+		0.0, 0.0, 0.0, 1.0);
+}
+
 //----------------------------------------------------------------------------
 
 /*void
 setModel(std::vector<glm::vec4> vertices, std::vector<GLushort> faces, color4 color)
 {
-	
-	for each (GLushort element in faces)
-	{
-		glm::vec4 currentPoint = vertices[element];
-		points.push_back(point4(currentPoint.x, currentPoint.y, currentPoint.z, 1.0));
-		colors.push_back(color);
-		//modelIndex++; burdakileri de vector yaptim
-	}
-	printf("%d \n", modelIndex);
+
+for each (GLushort element in faces)
+{
+glm::vec4 currentPoint = vertices[element];
+points.push_back(point4(currentPoint.x, currentPoint.y, currentPoint.z, 1.0));
+colors.push_back(color);
+//modelIndex++; burdakileri de vector yaptim
+}
+printf("%d \n", modelIndex);
 }*/
 
 /*void
 SetupSurface(void) {
 
-	points[modelIndex] = vec4(0.0, 0.0, 0.0 , 1.0); //setting up the vertices for the outer circle which will create the crescent
-	colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
-	for (modelIndex; modelIndex < 360; modelIndex++) {
-		points[modelIndex] = vec4(cos(modelIndex*radianConstant)*2.7, 0.0, sin(modelIndex*radianConstant)*2.7,1.0);
-		colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0);
-	}
-	points[modelIndex] = vec4(2.69958878, 0.0, 0.0471215174, 1.0);
-	colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
-	printf("%d \n", modelIndex);
+points[modelIndex] = vec4(0.0, 0.0, 0.0 , 1.0); //setting up the vertices for the outer circle which will create the crescent
+colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
+for (modelIndex; modelIndex < 360; modelIndex++) {
+points[modelIndex] = vec4(cos(modelIndex*radianConstant)*2.7, 0.0, sin(modelIndex*radianConstant)*2.7,1.0);
+colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0);
+}
+points[modelIndex] = vec4(2.69958878, 0.0, 0.0471215174, 1.0);
+colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
+printf("%d \n", modelIndex);
 }*/
 //----------------------------------------------------------------------------
 
@@ -318,28 +308,199 @@ addPlatformPiece(int gameGridX, int gameGridY, int type)
 		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(0.5, -0.80, -0.5, 1.0)
 	};
 
-	platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
+	platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = points.size();
 	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;
-	
+
 	point4 * platformPieceVPointer = platformPieceVertices;
 	cubicInitializer(platformPieceVPointer);
 	numberOfPlatformsOnScene++;
 }
 
-void
+//p 0 1 2 e  tabs doesn't matter
+void importLevel(string file) {
+	string line;
+	ifstream myfile(file);
+	while (getline(myfile, line))
+	{
+		istringstream iss(line);
+		char type;
+		char type2;
+		GLint a, b, c;
+		GLint d, e, f;
+		iss >> type;
+		while (type == '\t') {
+			iss >> type;
+		}
+		if (type == 'p') {
+			iss >> a >> b >> c;
+			addPlatformPiece(a, b, c);
+			iss >> type2;
+			while (type2 == 'p') {
+				iss >> d >> e >> f;
+				addPlatformPiece(d, e, f);
+				iss >> type2;
+			}
+		}
+	}
+	myfile.close();
+}
+
+GLint importFromOBJ(const char* filename, mat4 scaleMatrix) {
+	FILE * file = fopen(filename, "r");
+	if (file == NULL) {
+		printf("Impossible to open the file !\n");
+		return -1;
+	}
+	vector<point4> importedVertices;
+	vector<vec3> importedNormals;
+	GLint vertexCount = 0;
+	while (1)
+	{
+		char lineHeader[128];
+		// read the first word of the line
+		int res = fscanf(file, "%s", lineHeader);
+		if (res == EOF)
+			break;
+		GLfloat a, b, c;
+		GLint d, e, f;
+		if (strcmp(lineHeader, "v") == 0) {
+			fscanf(file, "%f %f %f\n", &a, &b, &c);
+			point4 point = point4(a, b, c, 1.0);
+			//importedVertices.push_back(scaling*translation*point); 
+			importedVertices.push_back(scaleMatrix*generateRotationMatrix(90, 0, 0)*point);
+		}
+		else if (strcmp(lineHeader, "vt") == 0) {
+			//We don't use textures.
+		}
+		else if (strcmp(lineHeader, "vn") == 0) {
+			fscanf(file, "%f %f %f\n", &a, &b, &c);
+			point4 point = point4(a, b, c, 1.0);
+			vec3 normal = vec3(a, b, c);
+			//importedNormals.push_back(scaling*translation*normal);
+			importedNormals.push_back(normal);
+		}
+		else if (strcmp(lineHeader, "f") == 0) {
+			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				//int matches2 = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
+				//if (matches2 != 6) {
+				printf("File can't be read by our simple parser :( Try exporting with other options\n");
+				return -1;
+				//}
+			}
+			points.push_back(importedVertices[vertexIndex[0] - 1]);
+			points.push_back(importedVertices[vertexIndex[1] - 1]);
+			points.push_back(importedVertices[vertexIndex[2] - 1]);
+			normals.push_back(importedNormals[normalIndex[0] - 1]);
+			normals.push_back(importedNormals[normalIndex[1] - 1]);
+			normals.push_back(importedNormals[normalIndex[2] - 1]);
+
+			vertexCount += 3;
+		}
+	}
+	fclose(file);
+	return vertexCount;
+}
+
+int indexBeforeMetronome;
+vec4 cubePosition;
+void addMetronomeCube() {
+	indexBeforeMetronome = points.size();;
+	cubePosition = position + direction;
+	mat4 scalingMat = mat4(0.75, 0.0, 0.0, 0.0,
+		0.0, 0.75, 0.0, 0.0,
+		0.0, 0.0, 0.75, 0.0,
+		0.0, 0.0, 0.0, 1.0);
+	mat4 translationMat = generateTranslationMatrix(cubePosition.x / 2, cubePosition.y / 2 - 3, cubePosition.z / 2);
+	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
+	point4 metronomeCubeVertices[8] = {
+		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5,  0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5, -0.5,  0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5, -0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(-0.5,  0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
+		translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
+	};
+	/*platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
+	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;*/
+
+	point4 * metronomeCubeVPointer = metronomeCubeVertices;
+	cubicInitializer(metronomeCubeVPointer);
+}
+float scaleMultiplier = 2;
+int increasing = 1;
+
+void updateMetronomeCube() {
+	//Fareye gore hareketini iyilestirmek icin biseyler yapmak lazim burda
+	cubePosition = position + 2 * (position - cubePosition)*direction;
+	// 0.75-2 scaling
+	if (scaleMultiplier >= 2) {
+		increasing = 0;
+	}
+	else if (scaleMultiplier <= 0.5) {
+		increasing = 1;
+	}
+
+	//VVVVVVV icin
+	/*if (increasing) {
+	scaleMultiplier += 0.001989*deltaTime;
+	}
+	else {
+	scaleMultiplier -= 0.001989*deltaTime;
+	}*/
+
+	//Paced Energy icin
+	if (increasing) {
+		scaleMultiplier += 0.002675*deltaTime;
+	}
+	else {
+		scaleMultiplier -= 0.002675*deltaTime;
+	}
+
+
+	mat4 scalingMat = mat4(scaleMultiplier, 0.0, 0.0, 0.0,
+		0.0, scaleMultiplier, 0.0, 0.0,
+		0.0, 0.0, scaleMultiplier, 0.0,
+		0.0, 0.0, 0.0, 1.0);
+	mat4 translationMat = generateTranslationMatrix(cubePosition.x, cubePosition.y, cubePosition.z);
+	mat4 translationMat2 = generateTranslationMatrix(0, -6, 0);
+	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
+	point4 metronomeCubeVertices[8] = {
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5, -0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5,  0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5,  0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5, -0.5,  0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5, -0.5, -0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5,  0.5, -0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
+		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
+	};
+	/*platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
+	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;*/
+
+	point4 * metronomeCubeVPointer = metronomeCubeVertices;
+	cubicUpdater(metronomeCubeVPointer, indexBeforeMetronome);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+}
+
+/*void
 setStartLevel()
 {
 
 
-																																					addPlatformPiece(0, -6, 1);	addPlatformPiece(1, -6, 1);	addPlatformPiece(2, -6, 1);
-																																					addPlatformPiece(0, -5, 1);	addPlatformPiece(1, -5, 4);	addPlatformPiece(2, -5, 1);
-																																					addPlatformPiece(0, -4, 1);	addPlatformPiece(1, -4, 1);	addPlatformPiece(2, -4, 1);
-	addPlatformPiece(-5, -3, 1);addPlatformPiece(-4, -3, 1); addPlatformPiece(-3, -3, 1);																						addPlatformPiece(1, -3, 1);
-	addPlatformPiece(-5, -2, 1);addPlatformPiece(-4, -2, 3); addPlatformPiece(-3, -2, 1); addPlatformPiece(-2, -2, 1);	addPlatformPiece(-1, -2, 1);							addPlatformPiece(1, -2, 1);
-	addPlatformPiece(-5, -1, 1);addPlatformPiece(-4, -1, 1); addPlatformPiece(-3, -1, 1);								addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1);addPlatformPiece(1, -1, 1);	addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1);
-																														addPlatformPiece(-1, 0, 1);	 addPlatformPiece(0, 0, 1);	addPlatformPiece(1, 0, 1);	addPlatformPiece(2, 0, 2);	addPlatformPiece(3, 0, 1);	
-																														addPlatformPiece(-1, 1, 1);	 addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1);	addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);				
-}
+addPlatformPiece(0, -6, 1);	addPlatformPiece(1, -6, 1);	addPlatformPiece(2, -6, 1);
+addPlatformPiece(0, -5, 1);	addPlatformPiece(1, -5, 4);	addPlatformPiece(2, -5, 1);
+addPlatformPiece(0, -4, 1);	addPlatformPiece(1, -4, 1);	addPlatformPiece(2, -4, 1);
+addPlatformPiece(-5, -3, 1);addPlatformPiece(-4, -3, 1); addPlatformPiece(-3, -3, 1);																						addPlatformPiece(1, -3, 1);
+addPlatformPiece(-5, -2, 1);addPlatformPiece(-4, -2, 3); addPlatformPiece(-3, -2, 1); addPlatformPiece(-2, -2, 1);	addPlatformPiece(-1, -2, 1);							addPlatformPiece(1, -2, 1);
+addPlatformPiece(-5, -1, 1);addPlatformPiece(-4, -1, 1); addPlatformPiece(-3, -1, 1);								addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1);addPlatformPiece(1, -1, 1);	addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1);
+addPlatformPiece(-1, 0, 1);	 addPlatformPiece(0, 0, 1);	addPlatformPiece(1, 0, 1);	addPlatformPiece(2, 0, 2);	addPlatformPiece(3, 0, 1);
+addPlatformPiece(-1, 1, 1);	 addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1);	addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);
+}*/
 GLuint program;
 void
 updateBuffers() {
@@ -364,6 +525,9 @@ updateBuffers() {
 	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0,
 		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4)));
 }
+
+int bb8Index;
+int bb8VCount;
 // OpenGL initialization
 void
 init()
@@ -372,7 +536,12 @@ init()
 	cubicInitializer(cubeVPointer);
 	playerCubeIndex = 0;
 	if (!engine)printf("could not start engine"); // 
-	setStartLevel();
+												  //setStartLevel();
+	importLevel("level1.txt");
+	addMetronomeCube();
+	bb8Index = points.size();;
+	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(2.5));
+
 	engine->play2D("presenting_vvvvvv.mp3", true);
 	srand(static_cast <unsigned> (glutGet(GLUT_ELAPSED_TIME)));
 
@@ -428,6 +597,7 @@ initializeUniformVariables(GLuint program) {
 	normal_matrix = glGetUniformLocation(program, "normal_matrix");
 	projection = glGetUniformLocation(program, "projection");
 	trs_matrix = glGetUniformLocation(program, "trs_matrix");
+	eye_position = glGetUniformLocation(program, "eye_position");
 }
 
 //----------------------------------------------------------------------------
@@ -469,18 +639,22 @@ generateRotationMatrix(int angleX, int angleY, int angleZ) {
 //----------------------------------------------------------------------------
 void MouseController(int x, int y)
 {
-	
-	mouseX = x; 
+
+	mouseX = x;
 	mouseY = y;
 	if (freecamToggle == true)
 	{
-		horizontalAngle += mouseSpeed * 0.01 *float(800 / 2 - mouseX);
-		verticalAngle += mouseSpeed *0.01 *float(800 / 2 - mouseY);
+		horizontalAngle += mouseSpeed * deltaTime * 0.01 *float(1280 / 2 - mouseX);
+		verticalAngle += mouseSpeed * deltaTime * 0.01 *float(720 / 2 - mouseY);
+		if (verticalAngle > 89.0f*radianConstant)
+			verticalAngle = 89.0f*radianConstant;
+		if (verticalAngle < -89.0f*radianConstant)
+			verticalAngle = -89.0f*radianConstant;
 	}
 
-	if (x != 800 / 2 || y != 800 / 2)
-		glutWarpPointer(800/2, 800 / 2);
-	
+	if (x != 1280 / 2 || y != 720 / 2)
+		glutWarpPointer(1280 / 2, 720 / 2);
+
 	glutPostRedisplay();
 }
 //----------------------------------------------------------------------------
@@ -514,7 +688,7 @@ updateLightProperties(color4 baseObjectColor)
 }
 
 void
-drawPlatforms() 
+drawPlatforms()
 {
 	updateLightProperties(color4(1.0, 1.0, 1.0, 1.0));
 	for (int i = 0; i < sceneSize; i++)
@@ -534,6 +708,13 @@ drawPlatforms()
 }
 
 void
+drawMetronomeCube()
+{
+	updateLightProperties(color4(0.3, 0.3, 1.0, 1.0));
+	glDrawArrays(GL_TRIANGLES, indexBeforeMetronome, 36);
+}
+
+void
 MoveCube()
 {
 	mat4 playerCubeRotationMatrix;
@@ -541,15 +722,15 @@ MoveCube()
 	mat4 playerCubeReverseTranslationMatrix;
 	if (playerCubeMoveDirection == 'R' || playerCubeMoveDirection == 'L' || playerCubeMoveDirection == 'U' || playerCubeMoveDirection == 'D')
 	{
-		int angleToRotate = (cubeRotationSpeed * deltaTime/10);
-		
+		int angleToRotate = (cubeRotationSpeed * deltaTime / 10);
+
 		if (angleToRotate + rotatedAngle > 90)
 		{
 			angleToRotate = 90 - rotatedAngle;
 		}
-		
+
 		switch (playerCubeMoveDirection) {
-		case 'U': playerCubeRotationMatrix = generateRotationMatrix(angleToRotate, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5-(playerCubePos.z)); break;
+		case 'U': playerCubeRotationMatrix = generateRotationMatrix(angleToRotate, 0, 0); playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, -0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, 0.5 - (playerCubePos.z)); break;
 		case 'D': playerCubeRotationMatrix = generateRotationMatrix(-angleToRotate, 0, 0);  playerCubeTranslationMatrix = generateTranslationMatrix(0, -0.5, 0.5 + (playerCubePos.z)); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0, 0.5, -0.5 - (playerCubePos.z)); break;
 		case 'R': playerCubeRotationMatrix = generateRotationMatrix(0, 0, -angleToRotate);  playerCubeTranslationMatrix = generateTranslationMatrix(0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(-0.5 - (playerCubePos.x), 0.5, 0); break;
 		case 'L': playerCubeRotationMatrix = generateRotationMatrix(0, 0, angleToRotate); playerCubeTranslationMatrix = generateTranslationMatrix(-0.5 + (playerCubePos.x), -0.5, 0); playerCubeReverseTranslationMatrix = generateTranslationMatrix(0.5 - (playerCubePos.x), 0.5, 0); break;
@@ -561,7 +742,7 @@ MoveCube()
 		}
 
 		point4 * cubeVPointer = cubeVertices;
-		
+
 		cubicUpdater(cubeVPointer, playerCubeIndex);
 
 		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
@@ -585,22 +766,22 @@ MoveCube()
 void
 DropCube()
 {
-	mat4 playerCubeTranslationMatrix = generateTranslationMatrix(0.0,-1.0* deltaTime/20,0.0);
+	mat4 playerCubeTranslationMatrix = generateTranslationMatrix(0.0, -1.0* deltaTime / 20, 0.0);
 
-		for (int i = 0; i < 8; i++)
-		{
-			cubeVertices[i] = playerCubeTranslationMatrix * cubeVertices[i];
-		}
+	for (int i = 0; i < 8; i++)
+	{
+		cubeVertices[i] = playerCubeTranslationMatrix * cubeVertices[i];
+	}
 
-		point4 * cubeVPointer = cubeVertices;
-		cubicUpdater(cubeVPointer, playerCubeIndex);
+	point4 * cubeVPointer = cubeVertices;
+	cubicUpdater(cubeVPointer, playerCubeIndex);
 
-		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 
 
-		
-		playerCubeMoveDirection = 'n';
+
+	playerCubeMoveDirection = 'n';
 
 }
 void
@@ -619,7 +800,7 @@ Respawn()
 float
 OscillateColorElement(float &colorElement, bool &colorTicker) {
 	float colorRandom = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX))*deltaTime / 850;
-	if (colorElement+colorRandom > 1)
+	if (colorElement + colorRandom > 1)
 	{
 		colorElement = 1;
 		colorTicker = true;
@@ -640,7 +821,7 @@ OscillateColorElement(float &colorElement, bool &colorTicker) {
 	return colorElement;
 }
 void
-RandomizeColor(color4 &color){
+RandomizeColor(color4 &color) {
 	color.x = OscillateColorElement(color.x, rTicker);
 	color.y = OscillateColorElement(color.y, gTicker);
 	color.z = OscillateColorElement(color.z, bTicker);
@@ -654,25 +835,25 @@ InitializeLevel1()
 
 
 		addPlatformPiece(4, 0, 1); addPlatformPiece(5, 0, 1); addPlatformPiece(6, 0, 1); addPlatformPiece(7, 0, 1); addPlatformPiece(8, 0, 1); addPlatformPiece(9, 0, 1); addPlatformPiece(10, 0, 1);	addPlatformPiece(11, 0, 1);
-																																																		addPlatformPiece(11, 1, 1);
-																																																		addPlatformPiece(11, 2, 1);
-																																																		addPlatformPiece(11, 3, 1);
-																																																		addPlatformPiece(11, 4, 1);
-																																																		addPlatformPiece(11, 5, 1);
-																																																		addPlatformPiece(11, 6, 1);
-																																																		addPlatformPiece(11, 7, 1);
-																																			addPlatformPiece(9, 8, 5);	addPlatformPiece(10, 8, 1);		addPlatformPiece(11, 8, 5);		addPlatformPiece(12, 8, 1);		addPlatformPiece(13, 8, 5);
-																																			addPlatformPiece(9, 9, 1);	addPlatformPiece(10, 9, 5);		addPlatformPiece(11, 9, 1);		addPlatformPiece(12, 9, 5);		addPlatformPiece(13, 9, 1);
-																																			addPlatformPiece(9, 10, 5); addPlatformPiece(10, 10, 1);	addPlatformPiece(11, 10, 5);	addPlatformPiece(12, 10, 1);	addPlatformPiece(13, 10, 5);
-																																			addPlatformPiece(9, 11, 1); addPlatformPiece(10, 11, 5);	addPlatformPiece(11, 11, 1);	addPlatformPiece(12, 11, 5);	addPlatformPiece(13, 11, 1);
-																																			addPlatformPiece(9, 12, 5); addPlatformPiece(10, 12, 1);	addPlatformPiece(11, 12, 5);	addPlatformPiece(12, 12, 1);	addPlatformPiece(13, 12, 5);
-																																			addPlatformPiece(9, 13, 1); addPlatformPiece(10, 13, 5);	addPlatformPiece(11, 13, 1);	addPlatformPiece(12, 13, 5);	addPlatformPiece(13, 13, 1);
-																																			addPlatformPiece(9, 14, 5); addPlatformPiece(10, 14, 1);	addPlatformPiece(11, 14, 5);	addPlatformPiece(12, 14, 1);	addPlatformPiece(13, 14, 5);
-																																			addPlatformPiece(9, 15, 1); addPlatformPiece(10, 15, 5);	addPlatformPiece(11, 15, 1);	addPlatformPiece(12, 15, 5);	addPlatformPiece(13, 15, 1);
-																																			addPlatformPiece(9, 16, 5); addPlatformPiece(10, 16, 1);	addPlatformPiece(11, 16, 5);	addPlatformPiece(12, 16, 1);	addPlatformPiece(13, 16, 5);
-																																			addPlatformPiece(9, 17, 1); addPlatformPiece(10, 17, 5);	addPlatformPiece(11, 17, 1);	addPlatformPiece(12, 17, 5);	addPlatformPiece(13, 17, 1);
-																																			addPlatformPiece(9, 18, 5); addPlatformPiece(10, 18, 1);	addPlatformPiece(11, 18, 5);	addPlatformPiece(12, 18, 1);	addPlatformPiece(13, 18, 5);
-																																			addPlatformPiece(9, 19, 1); addPlatformPiece(10, 19, 5);	addPlatformPiece(11, 19, 1);	addPlatformPiece(12, 19, 5);	addPlatformPiece(13, 19, 1);
+		addPlatformPiece(11, 1, 1);
+		addPlatformPiece(11, 2, 1);
+		addPlatformPiece(11, 3, 1);
+		addPlatformPiece(11, 4, 1);
+		addPlatformPiece(11, 5, 1);
+		addPlatformPiece(11, 6, 1);
+		addPlatformPiece(11, 7, 1);
+		addPlatformPiece(9, 8, 5);	addPlatformPiece(10, 8, 1);		addPlatformPiece(11, 8, 5);		addPlatformPiece(12, 8, 1);		addPlatformPiece(13, 8, 5);
+		addPlatformPiece(9, 9, 1);	addPlatformPiece(10, 9, 5);		addPlatformPiece(11, 9, 1);		addPlatformPiece(12, 9, 5);		addPlatformPiece(13, 9, 1);
+		addPlatformPiece(9, 10, 5); addPlatformPiece(10, 10, 1);	addPlatformPiece(11, 10, 5);	addPlatformPiece(12, 10, 1);	addPlatformPiece(13, 10, 5);
+		addPlatformPiece(9, 11, 1); addPlatformPiece(10, 11, 5);	addPlatformPiece(11, 11, 1);	addPlatformPiece(12, 11, 5);	addPlatformPiece(13, 11, 1);
+		addPlatformPiece(9, 12, 5); addPlatformPiece(10, 12, 1);	addPlatformPiece(11, 12, 5);	addPlatformPiece(12, 12, 1);	addPlatformPiece(13, 12, 5);
+		addPlatformPiece(9, 13, 1); addPlatformPiece(10, 13, 5);	addPlatformPiece(11, 13, 1);	addPlatformPiece(12, 13, 5);	addPlatformPiece(13, 13, 1);
+		addPlatformPiece(9, 14, 5); addPlatformPiece(10, 14, 1);	addPlatformPiece(11, 14, 5);	addPlatformPiece(12, 14, 1);	addPlatformPiece(13, 14, 5);
+		addPlatformPiece(9, 15, 1); addPlatformPiece(10, 15, 5);	addPlatformPiece(11, 15, 1);	addPlatformPiece(12, 15, 5);	addPlatformPiece(13, 15, 1);
+		addPlatformPiece(9, 16, 5); addPlatformPiece(10, 16, 1);	addPlatformPiece(11, 16, 5);	addPlatformPiece(12, 16, 1);	addPlatformPiece(13, 16, 5);
+		addPlatformPiece(9, 17, 1); addPlatformPiece(10, 17, 5);	addPlatformPiece(11, 17, 1);	addPlatformPiece(12, 17, 5);	addPlatformPiece(13, 17, 1);
+		addPlatformPiece(9, 18, 5); addPlatformPiece(10, 18, 1);	addPlatformPiece(11, 18, 5);	addPlatformPiece(12, 18, 1);	addPlatformPiece(13, 18, 5);
+		addPlatformPiece(9, 19, 1); addPlatformPiece(10, 19, 5);	addPlatformPiece(11, 19, 1);	addPlatformPiece(12, 19, 5);	addPlatformPiece(13, 19, 1);
 
 
 
@@ -681,7 +862,7 @@ InitializeLevel1()
 		updateBuffers();
 		level1Initialized = true;
 	}
-	
+
 }
 void
 CalculateDeltaTime()
@@ -739,7 +920,7 @@ display(void)
 	{
 		InitializeLevel1();
 	}
-	if (playerCubePos.x == 11 && playerCubePos.z== 5)
+	if (playerCubePos.x == 11 && playerCubePos.z == 5)
 	{
 		TurnCameraRight();
 	}
@@ -755,7 +936,7 @@ display(void)
 	{
 		exit(EXIT_SUCCESS);
 	}
-	if (platformType[(int)playerCubePos.x + sceneSize/2][(int)playerCubePos.z + sceneSize/2] == 0)
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 0)
 	{
 		DropCube();
 	}
@@ -780,27 +961,29 @@ display(void)
 
 	// Camera matrix
 	mat4 mView = LookAt(
-		cameraPosition,           // Camera is here
-		cameraPosition + direction, // and looks here : at the same position, plus "direction"
+		position,           // Camera is here
+		position + direction, // and looks here : at the same position, plus "direction"
 		up                  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUniformMatrix4fv(model_view, 1, GL_TRUE, mView);
-
+	glUniform3fv(eye_position, 1, position);
 	/*mat4  p = Ortho(ortho_left, ortho_right, ortho_bottom, ortho_top, zNear, zFar);*/
 	mat4  p = Perspective(fovy, aspect, zNear, zFar);
 	glUniformMatrix4fv(projection, 1, GL_TRUE, p);
-	
-	
-	mat4 r = generateRotationMatrix(0,0,0);
+
+
+	mat4 r = generateRotationMatrix(0, 0, 0);
 	glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, r);
 	mat4 t = generateTranslationMatrix(0, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	drawPlatforms();
-
+	updateMetronomeCube();
+	drawMetronomeCube();
+	glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
 	glutSwapBuffers();
 }
 
@@ -820,14 +1003,14 @@ keyboard(unsigned char key, int x, int y)
 	case 'q': case 'Q': engine->drop(); // delete engine
 		exit(EXIT_SUCCESS);
 		break;
-	case 'w': case 'W': if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R';} break;
-	case 'a': case 'A': if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
-	case 's': case 'S': if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
-	case 'd': case 'D': if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
+	case 'w': case 'W': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
+	case 'a': case 'A': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
+	case 's': case 'S': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
+	case 'd': case 'D': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
 	case 'f': case 'F': freecamToggle = !freecamToggle; break;
 	case 'r': case 'R': Respawn(); break;
-	case 'c': cameraPosition = initialCameraPosition; break; // resets camera position to the initial value
-	case 'p': printf("horizontalAngle:%f, verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, verticalAngle, cameraPosition.y, cameraPosition.z, radius, theta, phi); break;
+	case 'c': case 'C': position = initialPosition; verticalAngle = initialVerticalAngle; horizontalAngle = initialHorizontalAngle; break;
+	case 'p': printf("horizontalAngle:%f, verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
 	}
 
 	glutPostRedisplay();
@@ -838,14 +1021,11 @@ void SpecialInput(int key, int x, int y)
 {
 	switch (key)
 	{
-	// Move camera with arrow keys when the freecam mode is on
-	case GLUT_KEY_UP: if (freecamToggle == true)cameraPosition += direction * cameraSpeed; break;
-	case GLUT_KEY_DOWN: if (freecamToggle == true)cameraPosition -= direction * cameraSpeed; break;
-	case GLUT_KEY_RIGHT: if (freecamToggle == true)cameraPosition += right_vector * cameraSpeed; break;
-	case GLUT_KEY_LEFT: if (freecamToggle == true)cameraPosition -= right_vector * cameraSpeed; break;
-
+	case GLUT_KEY_UP: if (freecamToggle == true)position += direction * speed; break;
+	case GLUT_KEY_DOWN: if (freecamToggle == true)position -= direction * speed; break;
+	case GLUT_KEY_RIGHT: if (freecamToggle == true)position += right_vector * speed; break;
+	case GLUT_KEY_LEFT: if (freecamToggle == true)position -= right_vector * speed; break;
 	}
-
 	glutPostRedisplay();
 }
 
