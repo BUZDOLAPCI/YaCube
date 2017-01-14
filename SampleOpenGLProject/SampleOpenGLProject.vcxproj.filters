@@ -74,8 +74,4 @@
   <ItemGroup>
     <Text Include="level1.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Object Include="bb8.obj" />
-    <Object Include="Stormtrooper.obj" />
-  </ItemGroup>
 </Project>
