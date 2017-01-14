@@ -91,6 +91,8 @@ color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false
 const int sceneSize = 50;
 int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
 int platformIndex[sceneSize][sceneSize];
+int platformLeveled[sceneSize][sceneSize];
+float platformLevitationSpeed[sceneSize][sceneSize];
 bool actionAlreadyDone = false;
 void
 quadInitializer(point4 * vertices, int a, int b, int c, int d)
@@ -294,22 +296,28 @@ gridUnitToCoord(int gridUnit)
 	return gridUnit;
 }
 
+float bottomCoord = -20.0;
 void
 addPlatformPiece(int gameGridX, int gameGridY, int type)
 {
 	point4 platformPieceVertices[8] = {
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(-0.5, -0.80,  0.5, 1.0),
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(-0.5,  -0.50,  0.5, 1.0),
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(0.5,  -0.50,  0.5, 1.0),
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(0.5, -0.80,  0.5, 1.0),
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(-0.5, -0.80, -0.5, 1.0),
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(-0.5,  -0.50, -0.5, 1.0),
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(0.5,  -0.50, -0.5, 1.0),
-		generateTranslationMatrix(gridUnitToCoord(gameGridX),0.0, gridUnitToCoord(gameGridY))*point4(0.5, -0.80, -0.5, 1.0)
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(-0.5, -0.80,  0.5, 1.0),
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(-0.5,  -0.50,  0.5, 1.0),
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(0.5,  -0.50,  0.5, 1.0),
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(0.5, -0.80,  0.5, 1.0),
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(-0.5, -0.80, -0.5, 1.0),
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(-0.5,  -0.50, -0.5, 1.0),
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(0.5,  -0.50, -0.5, 1.0),
+		generateTranslationMatrix(gridUnitToCoord(gameGridX),bottomCoord, gridUnitToCoord(gameGridY))*point4(0.5, -0.80, -0.5, 1.0)
 	};
 
 	platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = points.size();
 	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;
+	platformLeveled[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 0;
+
+	float levitationSpeed = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	levitationSpeed = fmod(levitationSpeed , 0.25) + 0.25;
+	platformLevitationSpeed[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = levitationSpeed;
 
 	point4 * platformPieceVPointer = platformPieceVertices;
 	cubicInitializer(platformPieceVPointer);
@@ -395,6 +403,9 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix) {
 			normals.push_back(importedNormals[normalIndex[0] - 1]);
 			normals.push_back(importedNormals[normalIndex[1] - 1]);
 			normals.push_back(importedNormals[normalIndex[2] - 1]);
+			colors.push_back(vec4(1.0,0.0,0.0,1.0));
+			colors.push_back(vec4(1.0,0.0,0.0,1.0));
+			colors.push_back(vec4(1.0,0.0,0.0,1.0));
 
 			vertexCount += 3;
 		}
@@ -445,26 +456,23 @@ void updateMetronomeCube() {
 	}
 
 	//VVVVVVV icin
-	/*if (increasing) {
+	if (increasing) {
 	scaleMultiplier += 0.001989*deltaTime;
 	}
 	else {
 	scaleMultiplier -= 0.001989*deltaTime;
-	}*/
+	}
 
 	//Paced Energy icin
-	if (increasing) {
-		scaleMultiplier += 0.002675*deltaTime;
-	}
-	else {
-		scaleMultiplier -= 0.002675*deltaTime;
-	}
+	//if (increasing) {
+	//	scaleMultiplier += 0.002675*deltaTime;
+	//}
+	//else {
+	//	scaleMultiplier -= 0.002675*deltaTime;
+	//}
 
 
-	mat4 scalingMat = mat4(scaleMultiplier, 0.0, 0.0, 0.0,
-		0.0, scaleMultiplier, 0.0, 0.0,
-		0.0, 0.0, scaleMultiplier, 0.0,
-		0.0, 0.0, 0.0, 1.0);
+	mat4 scalingMat = generateScaleMatrix(scaleMultiplier);
 	mat4 translationMat = generateTranslationMatrix(cubePosition.x, cubePosition.y, cubePosition.z);
 	mat4 translationMat2 = generateTranslationMatrix(0, -6, 0);
 	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
@@ -532,6 +540,7 @@ int bb8VCount;
 void
 init()
 {
+	srand(static_cast <unsigned> (glutGet(GLUT_ELAPSED_TIME)));
 	point4 * cubeVPointer = cubeVertices;
 	cubicInitializer(cubeVPointer);
 	playerCubeIndex = 0;
@@ -539,11 +548,11 @@ init()
 												  //setStartLevel();
 	importLevel("level1.txt");
 	addMetronomeCube();
-	bb8Index = points.size();;
+	bb8Index = points.size();
 	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(2.5));
 
 	engine->play2D("presenting_vvvvvv.mp3", true);
-	srand(static_cast <unsigned> (glutGet(GLUT_ELAPSED_TIME)));
+	
 
 	// Create a vertex array object
 	GLuint vao;
@@ -688,6 +697,53 @@ updateLightProperties(color4 baseObjectColor)
 }
 
 void
+LevitatePlatform(int i, int j)
+{
+	if (platformLeveled[i][j] == 1)
+	{
+		return;
+	}
+	else
+	{
+		float speed = platformLevitationSpeed[i][j];
+		float levitationDiff = speed * deltaTime / 20;
+		int platformBufferIndex = platformIndex[i][j];
+		mat4 platformTranslationMatrix;
+		if ((points[platformBufferIndex + 1].y + levitationDiff) >= (-0.8))
+		{
+			float offset = (-0.8) - (points[platformBufferIndex + 1].y + levitationDiff);
+			levitationDiff += offset;
+			platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
+			platformLeveled[i][j] = 1;
+		}
+		else
+		{
+			platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
+		}
+		point4 platformPieceVertices[8] = {
+			points[platformBufferIndex + 1],
+			points[platformBufferIndex + 3],
+			points[platformBufferIndex + 5],
+			points[platformBufferIndex + 7],
+			points[platformBufferIndex + 14],
+			points[platformBufferIndex + 19],
+			points[platformBufferIndex + 11],
+			points[platformBufferIndex + 10]
+		};
+		for (int i = 0; i < 8; i++)
+		{
+			platformPieceVertices[i] = platformTranslationMatrix * platformPieceVertices[i];
+		}
+
+		point4 * cubeVPointer = platformPieceVertices;
+		cubicUpdater(cubeVPointer, platformIndex[i][j]);
+
+		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+	}
+
+}
+void
 drawPlatforms()
 {
 	updateLightProperties(color4(1.0, 1.0, 1.0, 1.0));
@@ -697,11 +753,11 @@ drawPlatforms()
 		{
 			switch (platformType[i][j]) {
 			case 0:  break;
-			case 1:  updateLightProperties(color4(1.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // normal platform - white
-			case 2:  updateLightProperties(color4(0.0, 1.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // start - green
-			case 3:  updateLightProperties(color4(1.0, 0.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // exit - red
-			case 4:  updateLightProperties(color4(0.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //color changer - yellow
-			case 5:  updateLightProperties(color4(0.8, 0.8, 0.8, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //normal platform -grey
+			case 1: LevitatePlatform(i, j); updateLightProperties(color4(1.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // normal platform - white
+			case 2: LevitatePlatform(i, j); updateLightProperties(color4(0.0, 1.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // start - green
+			case 3: LevitatePlatform(i, j); updateLightProperties(color4(1.0, 0.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // exit - red
+			case 4: LevitatePlatform(i, j); updateLightProperties(color4(0.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //color changer - yellow
+			case 5: LevitatePlatform(i, j); updateLightProperties(color4(0.8, 0.8, 0.8, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //normal platform -grey
 			}
 		}
 	}
