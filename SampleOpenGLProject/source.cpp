@@ -160,23 +160,22 @@ float radianConstant = 0.0174533;
 int modelIndex = 0;
 
 // position -5.263538, zNear:8.359282, zFar:15.757410,
-vec3 position = vec3(-5.263538, 8.359282, 15.757410);
-vec3 initialPosition = vec3(-5.263538, 8.359282, 15.757410);
-float horizontalAngle = 2.848656f;
-float initialHorizontalAngle = 2.848656f;
+vec3 initialPosition = vec3(-5.270120, 5.348522, 14.118294);
+vec3 position = initialPosition;
+float initialHorizontalAngle = 2.820005;
+float horizontalAngle = initialHorizontalAngle;
 // vertical angle : look downwards at the plate
-float verticalAngle = -0.446350f;
-float initialVerticalAngle = -0.446350f;
+float initialVerticalAngle = -0.292000;
+float verticalAngle = initialVerticalAngle;
 vec3 direction;
+//positionX: -5.270120, positionY : 5.348522, positionZ : 14.118294, horizontalAngle : 2.820005
+//	verticalAngle : -0.292000, zNear : 5.348522, zFar : 14.118294, radius : 8.000000, theta : 2.617994, phi : 0.872665
 
 // Right vector
 vec3 right_vector;
 
-
 // Up vector : perpendicular to both direction and right
 vec3 up = cross(right_vector, direction);
-
-
 
 float speed = 0.3f; // 3->9? units / second
 float mouseSpeed = 0.005f;
@@ -203,7 +202,7 @@ GLint toonEnable = 0;
 
 GLfloat  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
 GLfloat  aspect;       // Viewport aspect ratio
-GLfloat  zNear = 2.670417, zFar = 150.022503;
+GLfloat  zNear = 2.670417, zFar = 250.022503;
 
 GLuint  projection; // projection matrix uniform shader variable location
 
@@ -320,7 +319,7 @@ addPlatformPiece(int gameGridX, int gameGridY, int type)
 	platformLeveled[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 0;
 
 	float levitationSpeed = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	levitationSpeed = fmod(levitationSpeed , 0.25) + 0.25;
+	levitationSpeed = fmod(levitationSpeed, 0.25) + 0.25;
 	platformLevitationSpeed[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = levitationSpeed;
 
 	point4 * platformPieceVPointer = platformPieceVertices;
@@ -389,7 +388,7 @@ void importLevel(string file) {
 	myfile.close();
 }
 
-GLint importFromOBJ(const char* filename, mat4 scaleMatrix , mat4 rotationMatrix, mat4 TranslationMatrix) {
+GLint importFromOBJ(const char* filename, mat4 scaleMatrix, mat4 rotationMatrix, mat4 TranslationMatrix) {
 	FILE * file = fopen(filename, "r");
 	if (file == NULL) {
 		printf("Impossible to open the file !\n");
@@ -440,9 +439,9 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix , mat4 rotationMatrix
 			normals.push_back(importedNormals[normalIndex[0] - 1]);
 			normals.push_back(importedNormals[normalIndex[1] - 1]);
 			normals.push_back(importedNormals[normalIndex[2] - 1]);
-			colors.push_back(vec4(1.0,0.0,0.0,1.0));
-			colors.push_back(vec4(1.0,0.0,0.0,1.0));
-			colors.push_back(vec4(1.0,0.0,0.0,1.0));
+			colors.push_back(vec4(1.0, 0.0, 0.0, 1.0));
+			colors.push_back(vec4(1.0, 0.0, 0.0, 1.0));
+			colors.push_back(vec4(1.0, 0.0, 0.0, 1.0));
 
 			vertexCount += 3;
 		}
@@ -489,10 +488,10 @@ void updateMetronomeCube() {
 
 	//VVVVVVV icin
 	if (increasing) {
-	scaleMultiplier += 0.001989*deltaTime;
+		scaleMultiplier += 0.001989*deltaTime;
 	}
 	else {
-	scaleMultiplier -= 0.001989*deltaTime;
+		scaleMultiplier -= 0.001989*deltaTime;
 	}
 
 	//Paced Energy icin
@@ -527,13 +526,25 @@ void updateMetronomeCube() {
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 }
 
-int cityIndex;
-int cityVerticeCount = 0;
+int cityIndex[6] = { 0,0,0,0,0,0 };
+int cityVerticeCount[6] = { 0,0,0,0,0,0 };
+float citiesTranslateXOffset = 15;
+float citiesTranslateYOffset = -15;
+float citiesTranslateZOffset = 15;
 void
 SetupBackground() {
-	cityIndex = points.size();
-	cityVerticeCount += importFromOBJ("TheCity.obj", generateScaleMatrix(0.01), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0.0, -15.0, 0.0));
-	cityVerticeCount += importFromOBJ("TheCity.obj", generateScaleMatrix(0.01), generateRotationMatrix(0, 270, 0), generateTranslationMatrix(40.0, -15.0, -40.0));
+	cityIndex[0] = points.size();
+	cityVerticeCount[0] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.0 + citiesTranslateYOffset , 0.0 + citiesTranslateZOffset));
+	cityIndex[1] = points.size();
+	cityVerticeCount[1] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0),	generateTranslationMatrix(40.0 + citiesTranslateXOffset,	-15.0 + citiesTranslateYOffset, -40.0 + citiesTranslateZOffset));
+	cityIndex[2] = points.size();
+	cityVerticeCount[2] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.0 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
+	cityIndex[3] = points.size();
+	cityVerticeCount[3] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0),	generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.0 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
+	cityIndex[4] = points.size();
+	cityVerticeCount[4] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.0 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
+	cityIndex[5] = points.size();
+	cityVerticeCount[5] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(60.0 + citiesTranslateXOffset, -15.0 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
 
 }
 /*void
@@ -594,7 +605,7 @@ init()
 	SetupBackground();
 
 	engine->play2D("presenting_vvvvvv.mp3", true);
-	
+
 
 	// Create a vertex array object
 	GLuint vao;
@@ -634,7 +645,7 @@ init()
 	initializeUniformVariables(program);
 
 	glEnable(GL_DEPTH_TEST); glShadeModel(GL_FLAT);
-	glClearColor(0.0, 0.77734375, 0.6484375, 1.0);
+	glClearColor(0.85546875, 0.96484375, 0.92578125, 1.0);
 
 }
 void
@@ -939,8 +950,8 @@ Respawn()
 	currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0);
 	playerCubeMoveDirection = 'n';
 	//Camera reset
-	position = initialPosition; 
-	verticalAngle = initialVerticalAngle; 
+	position = initialPosition;
+	verticalAngle = initialVerticalAngle;
 	horizontalAngle = initialHorizontalAngle;
 	//Metronome cube reset
 	metronomeCubeColor = vec4(0.0, 0.0, 0.0, 1.0);
@@ -1031,9 +1042,9 @@ InitializeLevel1()
 
 			addPlatformPiece(-2, -3, 1);	addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1); addPlatformPiece(6, -3, 1);
 			addPlatformPiece(-2, -2, 1);	addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1); addPlatformPiece(6, -2, 1);
-											addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);
-											addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 1);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);  addPlatformPiece(5, 0, 1);
-											addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1);
+			addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);
+			addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 1);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);  addPlatformPiece(5, 0, 1);
+			addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1);
 
 			level1InitializeState = 2;
 			updateBuffers();
@@ -1130,9 +1141,9 @@ DecideCurrentPlatformAction()
 void
 display(void)
 {
-	
+
 	CalculateDeltaTime();
-	
+
 	DecideCurrentPlatformAction();
 
 	updateLightProperties(currentCubeColor);
@@ -1178,8 +1189,15 @@ display(void)
 	RandomizeColor(bb8Color);
 	updateLightProperties(bb8Color);
 	glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
-	updateLightProperties(vec4(1.0,1.0,1.0,1.0));
-	glDrawArrays(GL_TRIANGLES, cityIndex, cityVerticeCount);
+	
+
+	updateLightProperties(vec4(0.046875, 0.14453125, 0.22265625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[1], cityVerticeCount[1]);
+	updateLightProperties(vec4(0.24609375, 0.35546875, 0.44140625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[2], cityVerticeCount[2]);
+	updateLightProperties(vec4(0.39453125, 0.51953125, 0.609375, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[3], cityVerticeCount[3]);
+	updateLightProperties(vec4(0.59765625, 0.7265625, 0.80078125, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[4], cityVerticeCount[4]);
+	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[5], cityVerticeCount[5]);
+	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[6], cityVerticeCount[6]);
+
 	glutSwapBuffers();
 }
 
@@ -1267,15 +1285,17 @@ keyboard(unsigned char key, int x, int y)
 	case 'q': case 'Q': engine->drop(); // delete engine
 		exit(EXIT_SUCCESS);
 		break;
-	case 'w': case 'W': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
-	case 'a': case 'A': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
-	case 's': case 'S': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
-	case 'd': case 'D': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
+	case 'w': case 'W': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
+	case 'a': case 'A': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
+	case 's': case 'S': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
+	case 'd': case 'D': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
 	case 'f': case 'F': freecamToggle = !freecamToggle; break;
 	case 'r': case 'R': Respawn(); break;
 	case 'c': case 'C': position = initialPosition; verticalAngle = initialVerticalAngle; horizontalAngle = initialHorizontalAngle; break;
-	case 't': case 'T': if (toonEnable == 0) {toonEnable = 1;} else if(toonEnable == 1) { toonEnable = 2; } else if (toonEnable == 2) { toonEnable = 0;} break;
-	case 'p': printf("horizontalAngle:%f, verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
+	case 't': case 'T': if (toonEnable == 0) { toonEnable = 1; }
+			  else if (toonEnable == 1) { toonEnable = 2; }
+			  else if (toonEnable == 2) { toonEnable = 0; } break;
+	case 'p': printf("positionX: %f, positionY: %f,positionZ: %f,horizontalAngle:%f\n verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", position.x, position.y, position.z, horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
 	}
 
 	glutPostRedisplay();
