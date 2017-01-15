@@ -203,7 +203,7 @@ GLint toonEnable = 0;
 
 GLfloat  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
 GLfloat  aspect;       // Viewport aspect ratio
-GLfloat  zNear = 2.670417, zFar = 37.022503;
+GLfloat  zNear = 2.670417, zFar = 150.022503;
 
 GLuint  projection; // projection matrix uniform shader variable location
 
@@ -294,7 +294,7 @@ printf("%d \n", modelIndex);
 }*/
 //----------------------------------------------------------------------------
 
-float
+int
 gridUnitToCoord(int gridUnit)
 {
 	return gridUnit;
@@ -328,6 +328,38 @@ addPlatformPiece(int gameGridX, int gameGridY, int type)
 	numberOfPlatformsOnScene++;
 }
 
+void
+RemovePlatformPiece(int gameGridX, int gameGridY)
+{
+	platformLeveled[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 2;
+}
+
+void
+RemoveAllPlatforms()
+{
+	for (int i = 0; i < sceneSize; i++)
+	{
+		for (int j = 0; j < sceneSize; j++)
+		{
+			if (platformType[i][j] != 0)
+			{
+				if ((int)playerCubePos.x == (i - (sceneSize / 2)) && (int)playerCubePos.z == (j - (sceneSize / 2)))
+				{
+					continue;
+				}
+				else
+				{
+					RemovePlatformPiece(i - (sceneSize / 2), j - (sceneSize / 2));
+				}
+			}
+			else
+			{
+				continue;
+			}
+		}
+	}
+}
+
 //p 0 1 2 e  tabs doesn't matter
 void importLevel(string file) {
 	string line;
@@ -357,7 +389,7 @@ void importLevel(string file) {
 	myfile.close();
 }
 
-GLint importFromOBJ(const char* filename, mat4 scaleMatrix) {
+GLint importFromOBJ(const char* filename, mat4 scaleMatrix , mat4 rotationMatrix, mat4 TranslationMatrix) {
 	FILE * file = fopen(filename, "r");
 	if (file == NULL) {
 		printf("Impossible to open the file !\n");
@@ -380,7 +412,7 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix) {
 			point4 point = point4(a, b, c, 1.0);
 			//importedVertices.push_back(scaling*translation*point); 
 			/*importedVertices.push_back(scaleMatrix*generateRotationMatrix(90, 0, 0)*point);*/
-			importedVertices.push_back(scaleMatrix*generateRotationMatrix(0,-25,0)*generateTranslationMatrix(-4.0,-0.65,-6.5)*point);
+			importedVertices.push_back(TranslationMatrix*rotationMatrix*scaleMatrix*point);
 		}
 		else if (strcmp(lineHeader, "vt") == 0) {
 			//We don't use textures.
@@ -424,10 +456,7 @@ vec4 cubePosition;
 void addMetronomeCube() {
 	indexBeforeMetronome = points.size();
 	cubePosition = position + direction;
-	mat4 scalingMat = mat4(0.75, 0.0, 0.0, 0.0,
-		0.0, 0.75, 0.0, 0.0,
-		0.0, 0.0, 0.75, 0.0,
-		0.0, 0.0, 0.0, 1.0);
+	mat4 scalingMat = generateScaleMatrix(0.75);
 	mat4 translationMat = generateTranslationMatrix(cubePosition.x / 2, cubePosition.y / 2 - 3, cubePosition.z / 2);
 	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
 	point4 metronomeCubeVertices[8] = {
@@ -498,6 +527,15 @@ void updateMetronomeCube() {
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 }
 
+int cityIndex;
+int cityVerticeCount = 0;
+void
+SetupBackground() {
+	cityIndex = points.size();
+	cityVerticeCount += importFromOBJ("TheCity.obj", generateScaleMatrix(0.01), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0.0, -15.0, 0.0));
+	cityVerticeCount += importFromOBJ("TheCity.obj", generateScaleMatrix(0.01), generateRotationMatrix(0, 270, 0), generateTranslationMatrix(40.0, -15.0, -40.0));
+
+}
 /*void
 setStartLevel()
 {
@@ -552,7 +590,8 @@ init()
 	importLevel("level1.txt");
 	addMetronomeCube();
 	bb8Index = points.size();
-	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(0.75));
+	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(0.75), generateRotationMatrix(0, -25, 0), generateTranslationMatrix(-4.0, -0.65, -6.5));
+	SetupBackground();
 
 	engine->play2D("presenting_vvvvvv.mp3", true);
 	
@@ -700,6 +739,42 @@ updateLightProperties(color4 baseObjectColor)
 
 }
 
+bool
+CheckIfPlatformsAreLeveled()
+{
+	for (int i = 0; i < sceneSize; i++)
+	{
+		for (int j = 0; j < sceneSize; j++)
+		{
+			if (platformType[i][j] != 0)
+			{
+				if (platformLeveled[i][j] == 0 || platformLeveled[i][j] == 2)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+void
+CleanRemovedPlatformTypes()
+{
+	for (int i = 0; i < sceneSize; i++)
+	{
+		for (int j = 0; j < sceneSize; j++)
+		{
+			if (platformType[i][j] != 0)
+			{
+				if (platformLeveled[i][j] == 1)
+				{
+					platformType[i][j] = 0;
+				}
+			}
+		}
+	}
+}
+
 void
 LevitatePlatform(int i, int j)
 {
@@ -707,45 +782,50 @@ LevitatePlatform(int i, int j)
 	{
 		return;
 	}
+	float levitateUpperLimit = (-0.8);
+	if (platformLeveled[i][j] == 2)
+	{
+		levitateUpperLimit = (10.8);
+	}
+	if (platformLeveled[i][j] == 0)
+	{
+		levitateUpperLimit = (-0.8);
+	}
+	float speed = platformLevitationSpeed[i][j];
+	float levitationDiff = speed * deltaTime / 20;
+	int platformBufferIndex = platformIndex[i][j];
+	mat4 platformTranslationMatrix;
+	if ((points[platformBufferIndex + 1].y + levitationDiff) >= levitateUpperLimit)
+	{
+		float offset = levitateUpperLimit - (points[platformBufferIndex + 1].y + levitationDiff);
+		levitationDiff += offset;
+		platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
+		platformLeveled[i][j] = 1;
+	}
 	else
 	{
-		float speed = platformLevitationSpeed[i][j];
-		float levitationDiff = speed * deltaTime / 20;
-		int platformBufferIndex = platformIndex[i][j];
-		mat4 platformTranslationMatrix;
-		if ((points[platformBufferIndex + 1].y + levitationDiff) >= (-0.8))
-		{
-			float offset = (-0.8) - (points[platformBufferIndex + 1].y + levitationDiff);
-			levitationDiff += offset;
-			platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
-			platformLeveled[i][j] = 1;
-		}
-		else
-		{
-			platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
-		}
-		point4 platformPieceVertices[8] = {
-			points[platformBufferIndex + 1],
-			points[platformBufferIndex + 3],
-			points[platformBufferIndex + 5],
-			points[platformBufferIndex + 7],
-			points[platformBufferIndex + 14],
-			points[platformBufferIndex + 19],
-			points[platformBufferIndex + 11],
-			points[platformBufferIndex + 10]
-		};
-		for (int i = 0; i < 8; i++)
-		{
-			platformPieceVertices[i] = platformTranslationMatrix * platformPieceVertices[i];
-		}
-
-		point4 * cubeVPointer = platformPieceVertices;
-		cubicUpdater(cubeVPointer, platformIndex[i][j]);
-
-		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+		platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
+	}
+	point4 platformPieceVertices[8] = {
+		points[platformBufferIndex + 1],
+		points[platformBufferIndex + 3],
+		points[platformBufferIndex + 5],
+		points[platformBufferIndex + 7],
+		points[platformBufferIndex + 14],
+		points[platformBufferIndex + 19],
+		points[platformBufferIndex + 11],
+		points[platformBufferIndex + 10]
+	};
+	for (int i = 0; i < 8; i++)
+	{
+		platformPieceVertices[i] = platformTranslationMatrix * platformPieceVertices[i];
 	}
 
+	point4 * cubeVPointer = platformPieceVertices;
+	cubicUpdater(cubeVPointer, platformIndex[i][j]);
+
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 }
 void
 drawPlatforms()
@@ -760,8 +840,9 @@ drawPlatforms()
 			case 1: LevitatePlatform(i, j); updateLightProperties(color4(1.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // normal platform - white
 			case 2: LevitatePlatform(i, j); updateLightProperties(color4(0.0, 1.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // start - green
 			case 3: LevitatePlatform(i, j); updateLightProperties(color4(1.0, 0.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; // exit - red
-			case 4: LevitatePlatform(i, j); updateLightProperties(color4(0.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //color changer - yellow
+			case 4: LevitatePlatform(i, j); updateLightProperties(color4(0.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //color changer - cyan
 			case 5: LevitatePlatform(i, j); updateLightProperties(color4(0.8, 0.8, 0.8, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //normal platform -grey
+			case 6: LevitatePlatform(i, j); updateLightProperties(color4(0.984, 0.855, 0.140, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //credits button -yellow
 			}
 		}
 	}
@@ -893,11 +974,11 @@ RandomizeColor(color4 &color) {
 	color.y = OscillateColorElement(color.y, gTicker);
 	color.z = OscillateColorElement(color.z, bTicker);
 }
-bool level1Initialized = false;
+bool creditsInitialized = false;
 void
-InitializeLevel1()
+InitializeCredits()
 {
-	if (level1Initialized == false)
+	if (creditsInitialized == false)
 	{
 
 
@@ -927,9 +1008,38 @@ InitializeLevel1()
 
 
 		updateBuffers();
-		level1Initialized = true;
+		creditsInitialized = true;
 	}
 
+}
+
+int level1InitializeState = 0;
+void
+InitializeLevel1()
+{
+	if (level1InitializeState == 0)
+	{
+		RemoveAllPlatforms();
+		level1InitializeState = 1;
+	}
+	if (level1InitializeState == 1)
+	{
+		if (CheckIfPlatformsAreLeveled())
+		{
+			CleanRemovedPlatformTypes();
+			platformType[2 + sceneSize / 2][0 + sceneSize / 2] = 1;
+
+			addPlatformPiece(-2, -3, 1);	addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1); addPlatformPiece(6, -3, 1);
+			addPlatformPiece(-2, -2, 1);	addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1); addPlatformPiece(6, -2, 1);
+											addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);
+											addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 1);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);  addPlatformPiece(5, 0, 1);
+											addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1);
+
+			level1InitializeState = 2;
+			updateBuffers();
+		}
+		return;
+	}
 }
 void
 CalculateDeltaTime()
@@ -980,15 +1090,16 @@ TurnCameraRight()
 }
 
 
-
-//----------------------------------------------------------------------------
 void
-display(void)
+DecideCurrentPlatformAction()
 {
-	CalculateDeltaTime();
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 2)
 	{
 		InitializeLevel1();
+	}
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 6)
+	{
+		InitializeCredits();
 	}
 	if (playerCubePos.x == 11 && playerCubePos.z == 5)
 	{
@@ -1014,6 +1125,16 @@ display(void)
 	{
 		MoveCube();
 	}
+}
+//----------------------------------------------------------------------------
+void
+display(void)
+{
+	
+	CalculateDeltaTime();
+	
+	DecideCurrentPlatformAction();
+
 	updateLightProperties(currentCubeColor);
 
 	direction = vec3(
@@ -1052,11 +1173,13 @@ display(void)
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	drawPlatforms();
-	updateMetronomeCube();
-	drawMetronomeCube();
+	/*updateMetronomeCube();
+	drawMetronomeCube();*/
 	RandomizeColor(bb8Color);
 	updateLightProperties(bb8Color);
 	glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
+	updateLightProperties(vec4(1.0,1.0,1.0,1.0));
+	glDrawArrays(GL_TRIANGLES, cityIndex, cityVerticeCount);
 	glutSwapBuffers();
 }
 
@@ -1100,7 +1223,7 @@ int metronomeCubeHealth() {
 			Respawn();
 			return 0;
 		}
-		return 1;
+		return 2;
 	}
 	else if (scaleMultiplier >= 1.60) {
 		//Correct button press
