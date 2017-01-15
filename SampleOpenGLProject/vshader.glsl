@@ -7,7 +7,6 @@ in  vec3 vNormal;
 out vec4 color;
 out vec3 pos;
 out vec3 normal;
-//uniform int toonEnable;
 
 uniform vec4 AmbientProduct, DiffuseProduct, SpecularProduct;
 uniform mat4 model_view;
@@ -48,5 +47,5 @@ void main()
     color.a = 1.0;
 
 	//For toon shading
-	normal = N;
+	normal = normalize(mat3(normal_matrix)*vNormal);
 }

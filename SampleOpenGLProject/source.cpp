@@ -88,6 +88,7 @@ color4 vertex_colors[8] = {
 
 int numberOfPlatformsOnScene = 0;
 color4 currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0); bool rTicker = false; bool bTicker = false; bool gTicker = false;
+color4 bb8Color = color4(0.234, 4.56, 0.4345, 1.0);
 const int sceneSize = 50;
 int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
 int platformIndex[sceneSize][sceneSize];
@@ -177,7 +178,7 @@ vec3 up = cross(right_vector, direction);
 
 
 
-float speed = 0.3f; // 3 units / second
+float speed = 0.3f; // 3->9? units / second
 float mouseSpeed = 0.005f;
 
 int mouseX, mouseY;
@@ -195,6 +196,9 @@ GLuint  trs_matrix;
 GLuint  model_view;  // model-view matrix uniform shader variable location
 GLuint  normal_matrix;
 GLuint eye_position;
+GLuint toon_enable;
+
+GLint toonEnable = 0;
 // Projection transformation parameters
 
 GLfloat  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
@@ -418,7 +422,7 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix) {
 int indexBeforeMetronome;
 vec4 cubePosition;
 void addMetronomeCube() {
-	indexBeforeMetronome = points.size();;
+	indexBeforeMetronome = points.size();
 	cubePosition = position + direction;
 	mat4 scalingMat = mat4(0.75, 0.0, 0.0, 0.0,
 		0.0, 0.75, 0.0, 0.0,
@@ -436,8 +440,6 @@ void addMetronomeCube() {
 		translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
 		translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
 	};
-	/*platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
-	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;*/
 
 	point4 * metronomeCubeVPointer = metronomeCubeVertices;
 	cubicInitializer(metronomeCubeVPointer);
@@ -608,6 +610,7 @@ initializeUniformVariables(GLuint program) {
 	projection = glGetUniformLocation(program, "projection");
 	trs_matrix = glGetUniformLocation(program, "trs_matrix");
 	eye_position = glGetUniformLocation(program, "eye_position");
+	toon_enable = glGetUniformLocation(program, "toonEnable");
 }
 
 //----------------------------------------------------------------------------
@@ -764,10 +767,12 @@ drawPlatforms()
 	}
 }
 
+vec4 metronomeCubeColor = vec4(0.0, 0.0, 0.0, 1.0);
+
 void
 drawMetronomeCube()
 {
-	updateLightProperties(color4(0.3, 0.3, 1.0, 1.0));
+	updateLightProperties(metronomeCubeColor);
 	glDrawArrays(GL_TRIANGLES, indexBeforeMetronome, 36);
 }
 
@@ -852,7 +857,12 @@ Respawn()
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 	currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0);
 	playerCubeMoveDirection = 'n';
-
+	//Camera reset
+	position = initialPosition; 
+	verticalAngle = initialVerticalAngle; 
+	horizontalAngle = initialHorizontalAngle;
+	//Metronome cube reset
+	metronomeCubeColor = vec4(0.0, 0.0, 0.0, 1.0);
 }
 float
 OscillateColorElement(float &colorElement, bool &colorTicker) {
@@ -968,6 +978,9 @@ TurnCameraRight()
 		}
 	}
 }
+
+
+
 //----------------------------------------------------------------------------
 void
 display(void)
@@ -1026,6 +1039,7 @@ display(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUniformMatrix4fv(model_view, 1, GL_TRUE, mView);
 	glUniform3fv(eye_position, 1, position);
+	glUniform1i(toon_enable, toonEnable);
 	/*mat4  p = Ortho(ortho_left, ortho_right, ortho_bottom, ortho_top, zNear, zFar);*/
 	mat4  p = Perspective(fovy, aspect, zNear, zFar);
 	glUniformMatrix4fv(projection, 1, GL_TRUE, p);
@@ -1040,6 +1054,8 @@ display(void)
 	drawPlatforms();
 	updateMetronomeCube();
 	drawMetronomeCube();
+	RandomizeColor(bb8Color);
+	updateLightProperties(bb8Color);
 	glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
 	glutSwapBuffers();
 }
@@ -1052,6 +1068,74 @@ idle(void)
 }
 //----------------------------------------------------------------------------
 
+
+int metronomeCubeHealth() {
+	//Return 0 means 0 health, return 1 means wrong button press, return 2 means correct button press
+	if (scaleMultiplier < 1.60) {
+		//Wrong button press
+		if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.99 && metronomeCubeColor.y <= 1.0) {
+			//Full health
+			metronomeCubeColor.x = 0.0;
+			metronomeCubeColor.y = 1.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y - 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.01 && metronomeCubeColor.y < 0.99) {
+			//Above half health but not full health
+			metronomeCubeColor.x = 0.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y - 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+			//Half health
+			metronomeCubeColor.x = 0.0;
+			metronomeCubeColor.y = 0.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x + 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x > 0.01 && metronomeCubeColor.x < 0.99 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+			//Below half health but not zero health
+			metronomeCubeColor.y = 0.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x + 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+			//Zero health
+			Respawn();
+			return 0;
+		}
+		return 1;
+	}
+	else if (scaleMultiplier >= 1.60) {
+		//Correct button press
+		if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.99 && metronomeCubeColor.y <= 1.0) {
+			//Full health
+			metronomeCubeColor.x = 0.0;
+			metronomeCubeColor.y = 1.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.01 && metronomeCubeColor.y < 0.99) {
+			//Above half health but not full health
+			metronomeCubeColor.x = 0.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y + 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+			//Half health
+			metronomeCubeColor.x = 0.0;
+			metronomeCubeColor.y = 0.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y + 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x > 0.01 && metronomeCubeColor.x < 0.99 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+			//Below half health but not zero health
+			metronomeCubeColor.y = 0.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x - 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+			//Zero health
+			metronomeCubeColor.x = 1.0;
+			metronomeCubeColor.y = 0.0;
+			metronomeCubeColor = vec4(metronomeCubeColor.x - 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+		}
+		return 2;
+	}
+}
+
 void
 keyboard(unsigned char key, int x, int y)
 {
@@ -1060,13 +1144,14 @@ keyboard(unsigned char key, int x, int y)
 	case 'q': case 'Q': engine->drop(); // delete engine
 		exit(EXIT_SUCCESS);
 		break;
-	case 'w': case 'W': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
-	case 'a': case 'A': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
-	case 's': case 'S': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
-	case 'd': case 'D': /*if (scaleMultiplier < 1.60) {break;}*/ if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
+	case 'w': case 'W': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
+	case 'a': case 'A': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
+	case 's': case 'S': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
+	case 'd': case 'D': if (metronomeCubeHealth() != 2) {break;} if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
 	case 'f': case 'F': freecamToggle = !freecamToggle; break;
 	case 'r': case 'R': Respawn(); break;
 	case 'c': case 'C': position = initialPosition; verticalAngle = initialVerticalAngle; horizontalAngle = initialHorizontalAngle; break;
+	case 't': case 'T': if (toonEnable == 0) {toonEnable = 1;} else if(toonEnable == 1) { toonEnable = 2; } else if (toonEnable == 2) { toonEnable = 0;} break;
 	case 'p': printf("horizontalAngle:%f, verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
 	}
 
