@@ -375,7 +375,8 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix) {
 			fscanf(file, "%f %f %f\n", &a, &b, &c);
 			point4 point = point4(a, b, c, 1.0);
 			//importedVertices.push_back(scaling*translation*point); 
-			importedVertices.push_back(scaleMatrix*generateRotationMatrix(90, 0, 0)*point);
+			/*importedVertices.push_back(scaleMatrix*generateRotationMatrix(90, 0, 0)*point);*/
+			importedVertices.push_back(scaleMatrix*generateRotationMatrix(0,-25,0)*generateTranslationMatrix(-4.0,-0.65,-6.5)*point);
 		}
 		else if (strcmp(lineHeader, "vt") == 0) {
 			//We don't use textures.
@@ -549,7 +550,7 @@ init()
 	importLevel("level1.txt");
 	addMetronomeCube();
 	bb8Index = points.size();
-	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(2.5));
+	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(0.75));
 
 	engine->play2D("presenting_vvvvvv.mp3", true);
 	
