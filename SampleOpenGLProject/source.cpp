@@ -104,7 +104,6 @@ quadInitializer(point4 * vertices, int a, int b, int c, int d)
 	vec4 v = vertices[c] - vertices[b];
 
 	vec3 normal = normalize(cross(u, v));
-	int sizeV = points.size();
 	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);
 	normals.push_back(normal); colors.push_back(vertex_colors[b]); points.push_back(vertices[b]);
 	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);
@@ -202,7 +201,7 @@ GLint toonEnable = 0;
 
 GLfloat  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
 GLfloat  aspect;       // Viewport aspect ratio
-GLfloat  zNear = 2.670417, zFar = 250.022503;
+GLfloat  zNear = 2.670417, zFar = 1000.022503;
 
 GLuint  projection; // projection matrix uniform shader variable location
 
@@ -217,42 +216,6 @@ GLuint lightPosition;
 GLuint shininess;
 
 //----------------------------------------------------------------------------
-/*void load_obj(const char* filename, vector<glm::vec4> &vertices, vector<GLushort> &elements)
-{
-ifstream in(filename, ios::in);
-if (!in)
-{
-cerr << "Cannot open " << filename << endl; exit(1);
-}
-
-string line;
-while (getline(in, line))
-{
-if (line.substr(0, 2) == "v ")
-{
-istringstream s(line.substr(2));
-glm::vec4 v; s >> v.x; s >> v.y; s >> v.z; v.w = 1.0f;
-vertices.push_back(v);
-}
-else if (line.substr(0, 2) == "f ")
-{
-istringstream s(line.substr(2));
-GLushort a, b, c;
-s >> a; s >> b; s >> c;
-a--; b--; c--;
-elements.push_back(a); elements.push_back(b); elements.push_back(c);
-}
-else if (line[0] == '#')
-{
-// ignoring this line
-}
-else
-{
-// ignoring this line
-}
-}
-
-}*/
 
 mat4
 generateScaleMatrix(float scaleCoefficient) {
@@ -264,33 +227,6 @@ generateScaleMatrix(float scaleCoefficient) {
 
 //----------------------------------------------------------------------------
 
-/*void
-setModel(std::vector<glm::vec4> vertices, std::vector<GLushort> faces, color4 color)
-{
-
-for each (GLushort element in faces)
-{
-glm::vec4 currentPoint = vertices[element];
-points.push_back(point4(currentPoint.x, currentPoint.y, currentPoint.z, 1.0));
-colors.push_back(color);
-//modelIndex++; burdakileri de vector yaptim
-}
-printf("%d \n", modelIndex);
-}*/
-
-/*void
-SetupSurface(void) {
-
-points[modelIndex] = vec4(0.0, 0.0, 0.0 , 1.0); //setting up the vertices for the outer circle which will create the crescent
-colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
-for (modelIndex; modelIndex < 360; modelIndex++) {
-points[modelIndex] = vec4(cos(modelIndex*radianConstant)*2.7, 0.0, sin(modelIndex*radianConstant)*2.7,1.0);
-colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0);
-}
-points[modelIndex] = vec4(2.69958878, 0.0, 0.0471215174, 1.0);
-colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
-printf("%d \n", modelIndex);
-}*/
 //----------------------------------------------------------------------------
 
 int
@@ -421,7 +357,8 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix, mat4 rotationMatrix,
 			point4 point = point4(a, b, c, 1.0);
 			vec3 normal = vec3(a, b, c);
 			//importedNormals.push_back(scaling*translation*normal);
-			importedNormals.push_back(normal);
+			vec4 temp = rotationMatrix*vec4(normal, 1.0);
+			importedNormals.push_back(vec3(temp.x, temp.y, temp.z));
 		}
 		else if (strcmp(lineHeader, "f") == 0) {
 			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
@@ -532,17 +469,17 @@ float citiesTranslateZOffset = 15;
 void
 SetupBackground() {
 	cityIndex[0] = points.size();
-	cityVerticeCount[0] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.06 + citiesTranslateYOffset , 0.0 + citiesTranslateZOffset));
+	cityVerticeCount[0] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0),	generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.06 + citiesTranslateYOffset , -180.0 + citiesTranslateZOffset));
 	cityIndex[1] = points.size();
-	cityVerticeCount[1] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0),	generateTranslationMatrix(40.0 + citiesTranslateXOffset,	-15.05 + citiesTranslateYOffset, -40.0 + citiesTranslateZOffset));
+	cityVerticeCount[1] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0),	generateTranslationMatrix(40.0 + citiesTranslateXOffset, -15.05 + citiesTranslateYOffset, -40.0 + citiesTranslateZOffset));
 	cityIndex[2] = points.size();
 	cityVerticeCount[2] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.04 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
 	cityIndex[3] = points.size();
-	cityVerticeCount[3] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0),	generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.03 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
+	cityVerticeCount[3] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(-60.0 + citiesTranslateXOffset,-15.03 + citiesTranslateYOffset, -210.0 + citiesTranslateZOffset));
 	cityIndex[4] = points.size();
-	cityVerticeCount[4] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.02 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
+	cityVerticeCount[4] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0),	generateTranslationMatrix(-20.0 + citiesTranslateXOffset,-15.02 + citiesTranslateYOffset, -120.0 + citiesTranslateZOffset));
 	cityIndex[5] = points.size();
-	cityVerticeCount[5] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(60.0 + citiesTranslateXOffset, -15.01 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
+	cityVerticeCount[5] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0),	generateTranslationMatrix(20.0 + citiesTranslateXOffset, -15.01 + citiesTranslateYOffset, -190.0 + citiesTranslateZOffset));
 
 }
 /*void
@@ -584,8 +521,15 @@ updateBuffers() {
 		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4)));
 }
 
+vec4 surfaceVertices[4] = { generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(-0.5,  0.0,  0.5, 1.0), 
+							generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(0.5,  0.0,  0.5, 1.0), 
+							generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(-0.5,  0.0, -0.5, 1.0),
+							generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(0.5,  0.0, -0.5, 1.0) 
+};
+
 int bb8Index;
 int bb8VCount;
+int surfaceBeforeIndex;
 // OpenGL initialization
 void
 init()
@@ -593,6 +537,10 @@ init()
 	srand(static_cast <unsigned> (glutGet(GLUT_ELAPSED_TIME)));
 	point4 * cubeVPointer = cubeVertices;
 	cubicInitializer(cubeVPointer);
+	//Fill background surface
+	surfaceBeforeIndex = points.size();
+	quadInitializer(surfaceVertices, 3, 2, 0, 1);
+
 	playerCubeIndex = 0;
 	if (!engine)printf("could not start engine"); // 
 												  //setStartLevel();
@@ -1173,7 +1121,8 @@ display(void)
 	mat4 t = generateTranslationMatrix(0, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
-
+	//Draw background surface
+	glDrawArrays(GL_TRIANGLES, surfaceBeforeIndex, 6);
 	drawPlatforms();
 	/*updateMetronomeCube();
 	drawMetronomeCube();*/
@@ -1182,12 +1131,12 @@ display(void)
 	glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
 	
 
-	updateLightProperties(vec4(0.046875, 0.14453125, 0.22265625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[1], cityVerticeCount[1]);
-	updateLightProperties(vec4(0.24609375, 0.35546875, 0.44140625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[2], cityVerticeCount[2]);
-	updateLightProperties(vec4(0.39453125, 0.51953125, 0.609375, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[3], cityVerticeCount[3]);
-	updateLightProperties(vec4(0.59765625, 0.7265625, 0.80078125, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[4], cityVerticeCount[4]);
+	updateLightProperties(vec4(0.046875, 0.14453125, 0.22265625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[0], cityVerticeCount[0]);
+	updateLightProperties(vec4(0.24609375, 0.35546875, 0.44140625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[1], cityVerticeCount[1]);
+	updateLightProperties(vec4(0.39453125, 0.51953125, 0.609375, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[2], cityVerticeCount[2]);
+	updateLightProperties(vec4(0.59765625, 0.7265625, 0.80078125, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[3], cityVerticeCount[3]);
+	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[4], cityVerticeCount[4]);
 	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[5], cityVerticeCount[5]);
-	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[6], cityVerticeCount[6]);
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
