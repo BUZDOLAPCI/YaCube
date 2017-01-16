@@ -6,7 +6,8 @@
 #include "glui.h"														
 #include "freeglut.h"													
 #include "Angel.h"																		
-#include "OpenGL\lib\glm\glm.hpp"														
+#include "OpenGL\lib\glm\glm.hpp"
+#include "AntTweakBar.h"
 #include "irrKlang\irrKlang.h"
 #pragma comment(lib,"irrKlang.lib")																						
 //							                                                               .---.
@@ -1137,10 +1138,16 @@ display(void)
 	updateLightProperties(vec4(0.59765625, 0.7265625, 0.80078125, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[3], cityVerticeCount[3]);
 	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[4], cityVerticeCount[4]);
 	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[5], cityVerticeCount[5]);
+	int a = TwDraw();
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+
+	// Draw tweak bars
+
 	glutSwapBuffers();
+
+
 }
 
 //----------------------------------------------------------------------------
@@ -1262,7 +1269,17 @@ reshape(int width, int height)
 	glViewport(0, 0, width, height);
 
 	aspect = GLfloat(width) / height;
+	TwWindowSize(width, height);
+
 }
+// Function called at exit
+void Terminate(void)
+{
+
+	TwTerminate();
+}
+
+
 
 //----------------------------------------------------------------------------
 
@@ -1321,6 +1338,8 @@ void APIENTRY openglCallbackFunction(GLenum source,
 int
 main(int argc, char **argv)
 {
+
+	TwBar *bar; // Pointer to the tweak bar
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(1280, 720);
@@ -1333,6 +1352,8 @@ main(int argc, char **argv)
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 
 	window_id = glutCreateWindow("Experiment 4 - Cem Aslan 21426639");
+	glutCreateMenu(NULL);
+
 	glewExperimental = GL_TRUE;
 
 	glewInit();
@@ -1368,6 +1389,16 @@ main(int argc, char **argv)
 	glutSpecialFunc(SpecialInput);
 	glutPassiveMotionFunc(MouseController);
 	glutSetCursor(GLUT_CURSOR_NONE);
+	atexit(Terminate);
+
+	// Initialize AntTweakBar
+	TwInit(TW_OPENGL, NULL);
+	// Create a tweak bar
+	TwWindowSize(200, 200);
+	bar = TwNewBar("TweakBar");
+	TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLUT and OpenGL.' "); // Message added to the help bar.
+	TwDefine(" TweakBar size='200 400' color='96 216 224' "); // change default tweak bar size and 
+	TwAddVarRW(bar, "RotSpeed", TW_TYPE_FLOAT, &radius, "label='Rotation speed' ");
 
 	glutMainLoop();
 	return 0;

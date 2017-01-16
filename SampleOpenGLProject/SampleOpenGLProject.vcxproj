@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="Angel.h" />
     <ClInclude Include="mat.h" />
+    <ClInclude Include="OpenGL\include\AntTweakBar.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -172,6 +173,8 @@
     <None Include="fshader.glsl" />
     <None Include="ikpMP3.dll" />
     <None Include="irrKlang.dll" />
+    <None Include="OpenGL\lib\AntTweakBar.dll" />
+    <None Include="OpenGL\lib\AntTweakBar64.dll" />
     <None Include="vshader.glsl" />
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +186,8 @@
     <Media Include="start.mp3" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="OpenGL\lib\AntTweakBar.lib" />
+    <Library Include="OpenGL\lib\AntTweakBar64.lib" />
     <Library Include="OpenGL\lib\irrKlang.lib" />
   </ItemGroup>
   <ItemGroup>
