@@ -17,14 +17,17 @@ uniform float Shininess;
 uniform vec3 eye_position;
 void main()
 {
+	vec3 L,E,H;
 	mat4 normal_matrix = transpose(inverse(model_view));
     // Transform vertex  position into eye coordinates
     vec3 pos = (normal_matrix * vPosition).xyz;
-
-    vec3 L = normalize( (normal_matrix*LightPosition).xyz - pos );
-    vec3 E = normalize( -pos );
-    vec3 H = normalize( L + E );
-
+	if (LightPosition.w == 0.0) {
+		L = normalize( (normal_matrix*LightPosition).xyz - pos );
+	} else {
+		L = normalize(-LightPosition.xyz);
+	}
+    E = normalize( -pos );
+    H = normalize( L + E );
     // Transform vertex normal into eye coordinates
     vec3 N = normalize( model_view*vec4(vNormal, 0.0) ).xyz;
 

@@ -47,6 +47,11 @@ int playerCubeIndex;
 char playerCubeMoveDirection;
 bool freecamToggle = false;
 bool playerMovementLockToggle = false;
+bool mouseLocker = true;
+float light_info[4] = {-5.0, 15.0, 10.0,0.0};
+float light_ambient_info[3] = { 0.2, 0.2, 0.2 };
+float light_specular_info[3] = { 1.0, 1.0, 1.0 };
+float light_diffuse_info[3] = { 1.0, 1.0, 1.0 };
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 cubeVertices[8] = {
 	point4(-0.5, -0.5,  0.5, 1.0),
@@ -649,23 +654,28 @@ generateRotationMatrix(int angleX, int angleY, int angleZ) {
 //----------------------------------------------------------------------------
 void MouseController(int x, int y)
 {
+	if (!TwEventMouseMotionGLUT(mouseX, mouseY))  // send event to AntTweakBar
+	{ 
+		mouseX = x;
+		mouseY = y;
+		if (freecamToggle == true)
+		{
+			horizontalAngle += mouseSpeed * deltaTime * 0.01 *float(1280 / 2 - mouseX);
+			verticalAngle += mouseSpeed * deltaTime * 0.01 *float(720 / 2 - mouseY);
+			if (verticalAngle > 89.0f*radianConstant)
+				verticalAngle = 89.0f*radianConstant;
+			if (verticalAngle < -89.0f*radianConstant)
+				verticalAngle = -89.0f*radianConstant;
+		}
+		if (mouseLocker) {
+			if (x != 1280 / 2 || y != 720 / 2)
+				glutWarpPointer(1280 / 2, 720 / 2);
+		}
 
-	mouseX = x;
-	mouseY = y;
-	if (freecamToggle == true)
-	{
-		horizontalAngle += mouseSpeed * deltaTime * 0.01 *float(1280 / 2 - mouseX);
-		verticalAngle += mouseSpeed * deltaTime * 0.01 *float(720 / 2 - mouseY);
-		if (verticalAngle > 89.0f*radianConstant)
-			verticalAngle = 89.0f*radianConstant;
-		if (verticalAngle < -89.0f*radianConstant)
-			verticalAngle = -89.0f*radianConstant;
 	}
 
-	if (x != 1280 / 2 || y != 720 / 2)
-		glutWarpPointer(1280 / 2, 720 / 2);
-
 	glutPostRedisplay();
+
 }
 //----------------------------------------------------------------------------
 
@@ -673,15 +683,15 @@ void
 updateLightProperties(color4 baseObjectColor)
 {
 	// Initialize shader lighting parameters
-	point4 light_position(-5.0, 15.0, 10.0, 0.0);
-	color4 light_ambient(0.2, 0.2, 0.2, 1.0);
-	color4 light_diffuse(1.0, 1.0, 1.0, 1.0);
-	color4 light_specular(1.0, 1.0, 1.0, 1.0);
+	point4 light_position(light_info[0],light_info[1],light_info[2], light_info[3]);
+	color4 light_ambient(light_ambient_info[0], light_ambient_info[1], light_ambient_info[2], 1.0);
+	color4 light_diffuse(light_diffuse_info[0], light_diffuse_info[1], light_diffuse_info[2], 1.0);
+	color4 light_specular(light_specular_info[0], light_specular_info[1], light_specular_info[2], 1.0);
 
 	color4 material_ambient(1.0, 1.0, 1.0, 1.0);
 	color4 material_diffuse = baseObjectColor;
 	color4 material_specular = baseObjectColor;
-	float  material_shininess = 100.0;
+	float  material_shininess = 50.0;
 
 	color4 ambient_product = light_ambient * material_ambient;
 	color4 diffuse_product = light_diffuse * material_diffuse;
@@ -992,6 +1002,25 @@ InitializeLevel1()
 		return;
 	}
 }
+void 
+mouseClickHandler(int button, int state, int x, int y) {
+
+	if (!TwEventMouseButtonGLUT(button,state,x,y))  // send event to AntTweakBar
+	{ 
+		switch (button)
+		{
+		case GLUT_LEFT_BUTTON:
+			printf("burak");
+			mouseLocker = false;
+			glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+		}
+
+	}
+
+	glutPostRedisplay();
+
+}
+
 void
 CalculateDeltaTime()
 {
@@ -1138,13 +1167,13 @@ display(void)
 	updateLightProperties(vec4(0.59765625, 0.7265625, 0.80078125, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[3], cityVerticeCount[3]);
 	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[4], cityVerticeCount[4]);
 	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[5], cityVerticeCount[5]);
-	int a = TwDraw();
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 
 	// Draw tweak bars
-
+	TwDraw();
+	printf("%d", freecamToggle);
 	glutSwapBuffers();
 
 
@@ -1229,38 +1258,48 @@ int metronomeCubeHealth() {
 void
 keyboard(unsigned char key, int x, int y)
 {
-	switch (key) {
-	case 033: // Escape Key
-	case 'q': case 'Q': engine->drop(); // delete engine
-		exit(EXIT_SUCCESS);
-		break;
-	case 'w': case 'W': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
-	case 'a': case 'A': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
-	case 's': case 'S': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
-	case 'd': case 'D': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
-	case 'f': case 'F': freecamToggle = !freecamToggle; break;
-	case 'r': case 'R': Respawn(); break;
-	case 'c': case 'C': position = initialPosition; verticalAngle = initialVerticalAngle; horizontalAngle = initialHorizontalAngle; break;
-	case 't': case 'T': if (toonEnable == 0) { toonEnable = 1; }
-			  else if (toonEnable == 1) { toonEnable = 2; }
-			  else if (toonEnable == 2) { toonEnable = 0; } break;
-	case 'p': printf("positionX: %f, positionY: %f,positionZ: %f,horizontalAngle:%f\n verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", position.x, position.y, position.z, horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
+
+	if (!TwEventKeyboardGLUT(key,x,y))  // send event to AntTweakBar
+	{ 
+		switch (key) {
+		case 033: // Escape Key
+		case 'q': case 'Q': engine->drop(); // delete engine
+			exit(EXIT_SUCCESS);
+			break;
+		case 'w': case 'W': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
+		case 'a': case 'A': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'L'; if (turnTicker == true)playerCubeMoveDirection = 'U'; } break;
+		case 's': case 'S': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'D'; if (turnTicker == true)playerCubeMoveDirection = 'L'; } break;
+		case 'd': case 'D': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
+		case 'f': case 'F': freecamToggle = !freecamToggle; break;
+		case 'r': case 'R': Respawn(); break;
+		case 'c': case 'C': position = initialPosition; verticalAngle = initialVerticalAngle; horizontalAngle = initialHorizontalAngle; break;
+		case 't': case 'T': if (toonEnable == 0) { toonEnable = 1; }
+				  else if (toonEnable == 1) { toonEnable = 2; }
+				  else if (toonEnable == 2) { toonEnable = 0; } break;
+		case 'p': printf("positionX: %f, positionY: %f,positionZ: %f,horizontalAngle:%f\n verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", position.x, position.y, position.z, horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
+		}
+
 	}
 
 	glutPostRedisplay();
+
 }
 
 //----------------------------------------------------------------------------
 void SpecialInput(int key, int x, int y)
 {
-	switch (key)
-	{
-	case GLUT_KEY_UP: if (freecamToggle == true)position += direction * speed; break;
-	case GLUT_KEY_DOWN: if (freecamToggle == true)position -= direction * speed; break;
-	case GLUT_KEY_RIGHT: if (freecamToggle == true)position += right_vector * speed; break;
-	case GLUT_KEY_LEFT: if (freecamToggle == true)position -= right_vector * speed; break;
+	if (!TwEventSpecialGLUT(key,x,y))  // send event to AntTweakBar
+	{ 
+		switch (key)
+		{
+		case GLUT_KEY_UP: if (freecamToggle == true)position += direction * speed; break;
+		case GLUT_KEY_DOWN: if (freecamToggle == true)position -= direction * speed; break;
+		case GLUT_KEY_RIGHT: if (freecamToggle == true)position += right_vector * speed; break;
+		case GLUT_KEY_LEFT: if (freecamToggle == true)position -= right_vector * speed; break;
+		}
 	}
 	glutPostRedisplay();
+
 }
 
 void
@@ -1277,6 +1316,20 @@ void Terminate(void)
 {
 
 	TwTerminate();
+}
+//  Callback function called by the tweak bar to get the 'AutoRotate' value
+void TW_CALL GetAlphaAttrib(void *value, void *clientData)
+{
+	(void)clientData; // unused
+	*(int *)value = light_info[3]; // copy g_AutoRotate to value
+}
+
+void TW_CALL SetAlphaAttrib(const void *value, void *clientData)
+{
+	(void)clientData; // unused
+
+	light_info[3] = *(const int *)value; // copy value to g_AutoRotate
+
 }
 
 
@@ -1343,7 +1396,7 @@ main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(1280, 720);
-	glutInitContextVersion(3, 2);
+	//glutInitContextVersion(3, 2);
 	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE
 #if _DEBUG		
 		| GLUT_DEBUG
@@ -1382,24 +1435,50 @@ main(int argc, char **argv)
 
 	/*setGluiUp();*/
 
+	// Initialize AntTweakBar
+	TwInit(TW_OPENGL, NULL);
+
+	// Set GLUT event callbacks
+	glutMotionFunc((GLUTmousemotionfun)TwEventMouseMotionGLUT);
+	TwGLUTModifiersFunc(glutGetModifiers);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutIdleFunc(idle);
 	glutReshapeFunc(reshape);
 	glutSpecialFunc(SpecialInput);
 	glutPassiveMotionFunc(MouseController);
+	glutMouseFunc(mouseClickHandler);
 	glutSetCursor(GLUT_CURSOR_NONE);
 	atexit(Terminate);
 
-	// Initialize AntTweakBar
-	TwInit(TW_OPENGL, NULL);
+
+
+
 	// Create a tweak bar
 	TwWindowSize(200, 200);
 	bar = TwNewBar("TweakBar");
 	TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLUT and OpenGL.' "); // Message added to the help bar.
-	TwDefine(" TweakBar size='200 400' color='96 216 224' "); // change default tweak bar size and 
-	TwAddVarRW(bar, "RotSpeed", TW_TYPE_FLOAT, &radius, "label='Rotation speed' ");
+	TwDefine(" TweakBar size='200 400' color='255 0 0' "); // change default tweak bar size and 
+	TwAddVarRW(bar, "RotSpeed", TW_TYPE_FLOAT, &radius, " min=0.01 max=2.5 step=0.01 keyIncr=z keyDecr=Z help='Scale the object (1=original size).' ");
+	// Add 'g_LightDirection' to 'bar': this is a variable of type TW_TYPE_DIR3F which defines the light direction
+	TwAddVarRW(bar, "LightDir", TW_TYPE_DIR3F, &light_info,
+		" label='Light direction' opened=true help='Change the light direction.' ");
 
+	// Add 'g_MatAmbient' to 'bar': this is a variable of type TW_TYPE_COLOR3F (3 floats color, alpha is ignored)
+	// and is inserted into a group named 'Material'.
+	TwAddVarRW(bar, "Ambient", TW_TYPE_COLOR3F, &light_ambient_info, " group='Material' ");
+
+	// Add 'g_MatDiffuse' to 'bar': this is a variable of type TW_TYPE_COLOR3F (3 floats color, alpha is ignored)
+	// and is inserted into group 'Material'.
+	TwAddVarRW(bar, "Diffuse", TW_TYPE_COLOR3F, &light_diffuse_info, " group='Material' step=0.02 ");
+
+
+	// Add 'g_MatDiffuse' to 'bar': this is a variable of type TW_TYPE_COLOR3F (3 floats color, alpha is ignored)
+	// and is inserted into group 'Material'.
+	TwAddVarRW(bar, "Specular", TW_TYPE_COLOR3F, &light_specular_info, " group='Material' ");
+
+	TwAddVarCB(bar, "Directional", TW_TYPE_BOOL32, SetAlphaAttrib, GetAlphaAttrib, NULL,
+		" label='Auto-rotate' key=space help='Toggle auto-rotate mode.' ");
 	glutMainLoop();
 	return 0;
 }
