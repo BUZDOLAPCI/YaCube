@@ -532,17 +532,17 @@ float citiesTranslateZOffset = 15;
 void
 SetupBackground() {
 	cityIndex[0] = points.size();
-	cityVerticeCount[0] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.0 + citiesTranslateYOffset , 0.0 + citiesTranslateZOffset));
+	cityVerticeCount[0] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.06 + citiesTranslateYOffset , 0.0 + citiesTranslateZOffset));
 	cityIndex[1] = points.size();
-	cityVerticeCount[1] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0),	generateTranslationMatrix(40.0 + citiesTranslateXOffset,	-15.0 + citiesTranslateYOffset, -40.0 + citiesTranslateZOffset));
+	cityVerticeCount[1] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0),	generateTranslationMatrix(40.0 + citiesTranslateXOffset,	-15.05 + citiesTranslateYOffset, -40.0 + citiesTranslateZOffset));
 	cityIndex[2] = points.size();
-	cityVerticeCount[2] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.0 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
+	cityVerticeCount[2] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.04 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
 	cityIndex[3] = points.size();
-	cityVerticeCount[3] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0),	generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.0 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
+	cityVerticeCount[3] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0),	generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.03 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
 	cityIndex[4] = points.size();
-	cityVerticeCount[4] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.0 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
+	cityVerticeCount[4] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.02 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
 	cityIndex[5] = points.size();
-	cityVerticeCount[5] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(60.0 + citiesTranslateXOffset, -15.0 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
+	cityVerticeCount[5] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(60.0 + citiesTranslateXOffset, -15.01 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
 
 }
 /*void
