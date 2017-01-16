@@ -522,8 +522,6 @@ void updateMetronomeCube() {
 
 	point4 * metronomeCubeVPointer = metronomeCubeVertices;
 	cubicUpdater(metronomeCubeVPointer, indexBeforeMetronome);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 }
 
 int cityIndex[6] = { 0,0,0,0,0,0 };
@@ -835,8 +833,8 @@ LevitatePlatform(int i, int j)
 	point4 * cubeVPointer = platformPieceVertices;
 	cubicUpdater(cubeVPointer, platformIndex[i][j]);
 
-	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+	//glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	//glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 }
 void
 drawPlatforms()
@@ -899,8 +897,6 @@ MoveCube()
 
 		cubicUpdater(cubeVPointer, playerCubeIndex);
 
-		glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 
 		rotatedAngle += angleToRotate;
 		if (rotatedAngle == 90)
@@ -930,9 +926,6 @@ DropCube()
 	point4 * cubeVPointer = cubeVertices;
 	cubicUpdater(cubeVPointer, playerCubeIndex);
 
-	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
-
 
 
 	playerCubeMoveDirection = 'n';
@@ -945,8 +938,6 @@ Respawn()
 	point4 * cubeVPointer = cubeVertices;
 	cubicUpdater(cubeVPointer, playerCubeIndex);
 	playerCubePos = vec3(0, 0, 0);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 	currentCubeColor = color4(1.0, 0.0, 0.3984375, 1.0);
 	playerCubeMoveDirection = 'n';
 	//Camera reset
@@ -1198,6 +1189,8 @@ display(void)
 	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[5], cityVerticeCount[5]);
 	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[6], cityVerticeCount[6]);
 
+	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 	glutSwapBuffers();
 }
 
