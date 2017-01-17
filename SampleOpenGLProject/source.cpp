@@ -648,7 +648,6 @@ bool musicStarted = false;
 void startMusic() {
 	if (musicStarted == false)
 	{
-		addMetronomeCube();
 		vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, true);
 		vvvvvv->setPlayPosition(500);
 		if (vvvvvv)
@@ -660,7 +659,6 @@ void startMusic() {
 		}
 		musicStarted = true;
 	}
-
 }
 
 // OpenGL initialization
@@ -677,7 +675,7 @@ init()
 	if (!engine)printf("could not start engine"); // 
 												  //setStartLevel();
 	importLevel("level1.txt");
-
+	addMetronomeCube();
 	bb8Index = points.size();
 	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(0.75), generateRotationMatrix(0, -25, 0), generateTranslationMatrix(-4.0, -0.65, -6.5), true);
 	SetupBackground();
@@ -1397,10 +1395,12 @@ DecideCurrentPlatformAction()
 		MoveCube();
 	}
 }
-
 void calculateScore() {
 	int timeSpent = vvvvvv->getPlayPosition() - lastLegitInputTime;
-	fScore += ((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0001;
+	fScore += (((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0005 + 0.25)*deltaTime*0.1;
+	if (fScore < 0.0) {
+		fScore = 0.0;
+	}
 	iScore = fScore;
 	printf("Score float: %f\t Score int: %d\n ", fScore, iScore);
 }
