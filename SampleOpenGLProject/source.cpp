@@ -21,7 +21,7 @@ typedef Angel::vec4  point4;															//							|\|  | /|     \__  |   |____
 int window_id;																			//							|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
 float time;																				//							|       |      / ______(____  /\______  /____/|___  /\___  >         |
 int rotatedAngle = 0;																	//							|		|															 |
-float cubeRotationSpeed = 7; //default 5												//							|       |      \/           \/        \/          \/     \/          |
+float cubeRotationSpeed = 5; //default 5												//							|       |      \/           \/        \/          \/     \/          |
 vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
 																						// Projection transformation parameters													//							|       |                                                           /
 																						//							|       |----------------------------------------------------------'
@@ -461,6 +461,7 @@ void updateMetronomeCube() {
 
 	if (vvvvvv->getPlayPosition() >= 16500) {  // 0xx00 speed up at 20.00 second
 	bpm = 200;
+	cubeRotationSpeed = 10;
 	}
 
 	if (vvvvvv->getPlayPosition() - lastLegitInputTime > msPerBeat * 3 / 2) {
