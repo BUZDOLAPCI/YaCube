@@ -1,101 +1,104 @@
 ﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (SampleOpenGLProject.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   source.cpp
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\opengl\include\glui.h(868): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\angel.h(63): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\mat.h(707): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\mat.h(708): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\mat.h(709): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\mat.h(730): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\mat.h(732): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\mat.h(735): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\mat.h(752): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(26): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(57): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(57): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(58): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(58): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(119): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(192): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(196): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(198): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(201): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(221): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(222): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(224): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(238): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(277): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(277): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(278): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(279): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(280): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(280): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(281): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(281): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(282): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(283): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(284): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(284): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(293): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(454): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(463): warning C4244: 'argument': conversion from 'int' to 'const GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(478): warning C4018: '>': signed/unsigned mismatch
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(487): warning C4018: '>=': signed/unsigned mismatch
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(487): warning C4018: '<': signed/unsigned mismatch
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(494): warning C4018: '>': signed/unsigned mismatch
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(503): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(595): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(595): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(597): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(597): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(599): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(599): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(601): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(601): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(603): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(603): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(605): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(605): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(855): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(856): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(976): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(979): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(983): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1035): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1036): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1038): warning C4305: 'argument': truncation from 'double' to 'const float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1038): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1061): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1069): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1070): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1071): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1072): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1103): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1270): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1271): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1286): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1287): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1369): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1372): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1383): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1423): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1445): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1454): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1455): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1456): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1457): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1548): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1552): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1628): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1641): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1678): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1683): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1689): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1694): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1715): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1721): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1726): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1732): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1807): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1814): warning C4244: '=': conversion from 'const int' to 'float', possible loss of data
-c:\users\e-mer\desktop\yacubealmost\sampleopenglproject\source.cpp(1740): warning C4715: 'metronomeCubeHealth': not all control paths return a value
-  SampleOpenGLProject.vcxproj -> C:\Users\e-mer\Desktop\YaCubeAlmost\Debug\YaCube.exe
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\opengl\include\glui.h(868): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\angel.h(63): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\mat.h(707): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\mat.h(708): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\mat.h(709): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\mat.h(730): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\mat.h(732): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\mat.h(735): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\mat.h(752): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(26): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(58): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(58): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(59): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(59): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(123): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(196): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(200): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(202): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(205): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(225): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(226): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(228): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(242): warning C4305: 'initializing': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(281): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(281): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(282): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(283): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(284): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(284): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(285): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(285): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(286): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(287): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(288): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(288): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(297): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(458): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(467): warning C4244: 'argument': conversion from 'int' to 'const GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(482): warning C4018: '>': signed/unsigned mismatch
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(491): warning C4018: '>=': signed/unsigned mismatch
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(491): warning C4018: '<': signed/unsigned mismatch
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(498): warning C4018: '>': signed/unsigned mismatch
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(507): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(599): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(599): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(601): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(601): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(603): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(603): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(605): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(605): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(607): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(607): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(609): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(609): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(859): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(860): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(980): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(983): warning C4305: '=': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(987): warning C4305: '=': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1039): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1040): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1042): warning C4305: 'argument': truncation from 'double' to 'const float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1042): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1065): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1073): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1074): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1075): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1076): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1107): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1274): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1275): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1290): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1291): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1373): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1376): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1387): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1427): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1449): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1458): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1459): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1460): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1461): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1464): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1554): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1558): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1634): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1646): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1647): warning C4305: 'argument': truncation from 'double' to 'GLfloat'
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1686): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1691): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1697): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1702): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1723): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1729): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1734): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1740): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1815): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1822): warning C4244: '=': conversion from 'const int' to 'float', possible loss of data
+c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1748): warning C4715: 'metronomeCubeHealth': not all control paths return a value
+  SampleOpenGLProject.vcxproj -> C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\YaCube.exe
+  SampleOpenGLProject.vcxproj -> C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\YaCube.pdb (Full PDB)
