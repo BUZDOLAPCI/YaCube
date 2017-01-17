@@ -9,6 +9,11 @@ uniform int toonEnable;
 uniform mat4 model_view;
 uniform vec3 eye_position;
 
+//texture trial
+in vec2 Texcoord;
+uniform sampler2D texKitten;
+uniform int textured;
+
 void main()
 {
 	float intensity;
@@ -47,6 +52,9 @@ void main()
 				fColor = vec4(0.2,0.2,0.2,1.0);
 		}
 	}
-	else
-		fColor = color;
+	else{
+		if(textured == 1) {fColor = texture(texKitten, Texcoord);}
+		else	
+			fColor = color;
+	}
 }

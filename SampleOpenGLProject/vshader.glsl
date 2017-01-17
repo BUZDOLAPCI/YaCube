@@ -8,6 +8,11 @@ out vec4 color;
 out vec3 pos;
 out vec3 normal;
 
+//texture trial
+in vec2 vTexCoord;
+out vec2 Texcoord;
+uniform int textured;
+
 uniform vec4 AmbientProduct, DiffuseProduct, SpecularProduct;
 uniform mat4 model_view;
 uniform mat4 projection;
@@ -17,6 +22,8 @@ uniform float Shininess;
 uniform vec3 eye_position;
 void main()
 {
+    if(textured == 1) {Texcoord = vTexCoord;}
+
 	vec3 L,E,H;
     mat4 normal_matrix = transpose(inverse(model_view));
     // Transform vertex  position into eye coordinates

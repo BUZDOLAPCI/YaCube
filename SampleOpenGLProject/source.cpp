@@ -9,6 +9,7 @@
 #include "OpenGL\lib\glm\glm.hpp"			
 #include "AntTweakBar.h"
 #include "irrKlang\irrKlang.h"
+#include "SOIL.h" // Library for Image Loading - Texture
 #pragma comment(lib,"irrKlang.lib")																						
 //							                                                               .---.
 //							                                                             |\_/|   |											                                                             |   |  /|
@@ -62,6 +63,16 @@ float trooper_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 int trooper_RotateTime = 0;
 float trooper_RotateStart[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
+//texture trial
+GLuint textured;
+vector<GLfloat> texCoords = { //WIP
+	256.0f, 0.0f,
+	0.0f, 0.0f,
+	0.0f, 256.0f,
+	256.0f, 0.0f,
+	0.0f, 0.0f,
+	256.0f, 256.0f
+};
 
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 cubeVertices[8] = {
@@ -635,6 +646,8 @@ updateBuffers() {
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4), colors.size() * sizeof(vec4), &colors[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
+	//texture trial
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + normals.size() * sizeof(vec3), texCoords.size() * sizeof(GLfloat), &texCoords[0]);
 
 	// set up vertex arrays
 	GLuint vPosition = glGetAttribLocation(program, "vPosition");
@@ -651,6 +664,12 @@ updateBuffers() {
 	glEnableVertexAttribArray(vNormal);
 	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0,
 		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4)));
+
+	//texture trial
+	GLint texAttrib = glGetAttribLocation(program, "vTexCoord");
+	glEnableVertexAttribArray(texAttrib);
+	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 0,
+	BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + texCoords.size() * sizeof(GLfloat)));
 }
 
 
@@ -701,6 +720,27 @@ init()
 	logoCount = importFromOBJ("yacube_logo.obj", generateScaleMatrix(60), generateRotationMatrix(-90, 0, 0), generateTranslationMatrix(110.0,0.0,-350.0), false);
 	SetupBackground();
 
+	//texture trial code
+	GLuint texture;
+	glGenTextures(1, &texture);
+
+	int width = 0, height = 0;
+	unsigned char* image;
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	image = SOIL_load_image("256.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	SOIL_free_image_data(image);
+	glUniform1i(glGetUniformLocation(program, "texKitten"), 0);
+	//glGenerateMipmap(GL_TEXTURE_2D);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	//texture trial end
+
 	// Create a vertex array object
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -715,7 +755,9 @@ init()
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4), colors.size() * sizeof(vec4), &colors[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
-
+	//texture trial
+	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + normals.size() * sizeof(vec3), texCoords.size() * sizeof(GLfloat), &texCoords[0]);
+	
 	// Load shaders and use the resulting shader program
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
@@ -736,6 +778,12 @@ init()
 	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0,
 		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4)));
 
+	//texture trial
+	GLint texAttrib = glGetAttribLocation(program, "vTexCoord");
+	glEnableVertexAttribArray(texAttrib);
+	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 0,
+		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + texCoords.size() * sizeof(GLfloat)));
+	
 	initializeUniformVariables(program);
 
 	glEnable(GL_DEPTH_TEST); glShadeModel(GL_FLAT);
@@ -755,6 +803,8 @@ initializeUniformVariables(GLuint program) {
 	trs_matrix = glGetUniformLocation(program, "trs_matrix");
 	eye_position = glGetUniformLocation(program, "eye_position");
 	toon_enable = glGetUniformLocation(program, "toonEnable");
+	//texture trial
+	textured = glGetUniformLocation(program, "textured");
 }
 
 //----------------------------------------------------------------------------
@@ -1379,7 +1429,9 @@ DrawCities()
 	mat4 s = generateScaleMatrix(1);
 	mat4 r = generateRotationMatrix(0, 0, 0);
 	mat4 t = generateTranslationMatrix(0, citiesYTranslate, 0); glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t*r*s);
+	glUniform1i(textured, 1);
 	glDrawArrays(GL_TRIANGLES, surfaceBeforeIndex, 6);
+	glUniform1i(textured, 0);
 	updateLightProperties(vec4(0.046875, 0.14453125, 0.22265625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[0], cityVerticeCount[0]);
 	updateLightProperties(vec4(0.24609375, 0.35546875, 0.44140625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[1], cityVerticeCount[1]);
 	updateLightProperties(vec4(0.39453125, 0.51953125, 0.609375, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[2], cityVerticeCount[2]);
