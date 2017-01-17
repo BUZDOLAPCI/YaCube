@@ -44,6 +44,9 @@
     <ClInclude Include="targetver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="OpenGL\include\AntTweakBar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SampleOpenGLProject.rc">
@@ -55,6 +58,8 @@
     <None Include="vshader.glsl" />
     <None Include="irrKlang.dll" />
     <None Include="ikpMP3.dll" />
+    <None Include="AntTweakBar.dll" />
+    <None Include="AntTweakBar64.dll" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="Resources\Music\presenting_vvvvvv.mp3" />
@@ -70,8 +75,10 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="OpenGL\lib\irrKlang.lib" />
+    <Library Include="OpenGL\lib\AntTweakBar.lib" />
+    <Library Include="OpenGL\lib\AntTweakBar64.lib" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="level1.txt" />
+    <Text Include="menuLevel.txt" />
   </ItemGroup>
 </Project>

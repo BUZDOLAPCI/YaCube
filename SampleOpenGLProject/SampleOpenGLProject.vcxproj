@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="Angel.h" />
     <ClInclude Include="mat.h" />
+    <ClInclude Include="OpenGL\include\AntTweakBar.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -169,6 +170,8 @@
     <ResourceCompile Include="SampleOpenGLProject.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AntTweakBar.dll" />
+    <None Include="AntTweakBar64.dll" />
     <None Include="fshader.glsl" />
     <None Include="ikpMP3.dll" />
     <None Include="irrKlang.dll" />
@@ -183,10 +186,12 @@
     <Media Include="start.mp3" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="OpenGL\lib\AntTweakBar.lib" />
+    <Library Include="OpenGL\lib\AntTweakBar64.lib" />
     <Library Include="OpenGL\lib\irrKlang.lib" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="level1.txt" />
+    <Text Include="menuLevel.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
