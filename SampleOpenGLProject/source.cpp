@@ -62,7 +62,7 @@ float light_diffuse_info[3] = {1.0, 1.0, 1.0 };
 
 float trooper_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 float logo_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-float score_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+float score_Rotation[] = { -0.47f, 0.0f, 0.04f, 1.0f };
 
 int trooper_RotateTime = 0;
 float trooper_RotateStart[] = { 0.0f, 0.0f, 0.0f, 1.0f };
