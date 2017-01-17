@@ -31,11 +31,14 @@ GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
 																						//point4 points[22754];
 																						//color4 colors[22754];
 irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
+irrklang::ISoundEffectControl* fx = 0;
+irrklang::ISound* vvvvvv;
 const int NumVertices = 36 * 2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 int timeSinceStart; int deltaTime;
 void initializeUniformVariables(GLuint program);
 mat4 generateTranslationMatrix(GLfloat x, GLfloat y, GLfloat z);
 mat4 generateRotationMatrix(int x, int y, int z);
+int metronomeCubeHealth();
 vector<point4> points;
 vector<color4> colors;
 vector<vec3> normals;
@@ -94,7 +97,13 @@ int platformType[sceneSize][sceneSize]; // 0: empty	1: basic
 int platformIndex[sceneSize][sceneSize];
 int platformLeveled[sceneSize][sceneSize];
 float platformLevitationSpeed[sceneSize][sceneSize];
+color4 platformHighlightColor[sceneSize][sceneSize];
+int platformHiglightTicker[sceneSize][sceneSize];
 bool actionAlreadyDone = false;
+bool gotInput = false;
+float fScore;
+int iScore;
+
 void
 quadInitializer(point4 * vertices, int a, int b, int c, int d)
 {
@@ -104,7 +113,6 @@ quadInitializer(point4 * vertices, int a, int b, int c, int d)
 	vec4 v = vertices[c] - vertices[b];
 
 	vec3 normal = normalize(cross(u, v));
-	int sizeV = points.size();
 	normals.push_back(normal); colors.push_back(vertex_colors[a]); points.push_back(vertices[a]);
 	normals.push_back(normal); colors.push_back(vertex_colors[b]); points.push_back(vertices[b]);
 	normals.push_back(normal); colors.push_back(vertex_colors[c]); points.push_back(vertices[c]);
@@ -202,7 +210,7 @@ GLint toonEnable = 0;
 
 GLfloat  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
 GLfloat  aspect;       // Viewport aspect ratio
-GLfloat  zNear = 2.670417, zFar = 250.022503;
+GLfloat  zNear = 0.170417, zFar = 1000.022503;
 
 GLuint  projection; // projection matrix uniform shader variable location
 
@@ -217,42 +225,6 @@ GLuint lightPosition;
 GLuint shininess;
 
 //----------------------------------------------------------------------------
-/*void load_obj(const char* filename, vector<glm::vec4> &vertices, vector<GLushort> &elements)
-{
-ifstream in(filename, ios::in);
-if (!in)
-{
-cerr << "Cannot open " << filename << endl; exit(1);
-}
-
-string line;
-while (getline(in, line))
-{
-if (line.substr(0, 2) == "v ")
-{
-istringstream s(line.substr(2));
-glm::vec4 v; s >> v.x; s >> v.y; s >> v.z; v.w = 1.0f;
-vertices.push_back(v);
-}
-else if (line.substr(0, 2) == "f ")
-{
-istringstream s(line.substr(2));
-GLushort a, b, c;
-s >> a; s >> b; s >> c;
-a--; b--; c--;
-elements.push_back(a); elements.push_back(b); elements.push_back(c);
-}
-else if (line[0] == '#')
-{
-// ignoring this line
-}
-else
-{
-// ignoring this line
-}
-}
-
-}*/
 
 mat4
 generateScaleMatrix(float scaleCoefficient) {
@@ -264,33 +236,6 @@ generateScaleMatrix(float scaleCoefficient) {
 
 //----------------------------------------------------------------------------
 
-/*void
-setModel(std::vector<glm::vec4> vertices, std::vector<GLushort> faces, color4 color)
-{
-
-for each (GLushort element in faces)
-{
-glm::vec4 currentPoint = vertices[element];
-points.push_back(point4(currentPoint.x, currentPoint.y, currentPoint.z, 1.0));
-colors.push_back(color);
-//modelIndex++; burdakileri de vector yaptim
-}
-printf("%d \n", modelIndex);
-}*/
-
-/*void
-SetupSurface(void) {
-
-points[modelIndex] = vec4(0.0, 0.0, 0.0 , 1.0); //setting up the vertices for the outer circle which will create the crescent
-colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
-for (modelIndex; modelIndex < 360; modelIndex++) {
-points[modelIndex] = vec4(cos(modelIndex*radianConstant)*2.7, 0.0, sin(modelIndex*radianConstant)*2.7,1.0);
-colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0);
-}
-points[modelIndex] = vec4(2.69958878, 0.0, 0.0471215174, 1.0);
-colors[modelIndex] = vec4(1.0, 0.0, 0.0, 1.0); modelIndex++;
-printf("%d \n", modelIndex);
-}*/
 //----------------------------------------------------------------------------
 
 int
@@ -317,6 +262,7 @@ addPlatformPiece(int gameGridX, int gameGridY, int type)
 	platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = points.size();
 	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;
 	platformLeveled[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 0;
+	platformHiglightTicker[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 0;
 
 	float levitationSpeed = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 	levitationSpeed = fmod(levitationSpeed, 0.25) + 0.25;
@@ -388,7 +334,7 @@ void importLevel(string file) {
 	myfile.close();
 }
 
-GLint importFromOBJ(const char* filename, mat4 scaleMatrix, mat4 rotationMatrix, mat4 TranslationMatrix) {
+GLint importFromOBJ(const char* filename, mat4 scaleMatrix, mat4 rotationMatrix, mat4 TranslationMatrix, bool hasTexture) {
 	FILE * file = fopen(filename, "r");
 	if (file == NULL) {
 		printf("Impossible to open the file !\n");
@@ -404,8 +350,7 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix, mat4 rotationMatrix,
 		int res = fscanf(file, "%s", lineHeader);
 		if (res == EOF)
 			break;
-		GLfloat a, b, c;
-		GLint d, e, f;
+		float a, b, c;
 		if (strcmp(lineHeader, "v") == 0) {
 			fscanf(file, "%f %f %f\n", &a, &b, &c);
 			point4 point = point4(a, b, c, 1.0);
@@ -421,18 +366,27 @@ GLint importFromOBJ(const char* filename, mat4 scaleMatrix, mat4 rotationMatrix,
 			point4 point = point4(a, b, c, 1.0);
 			vec3 normal = vec3(a, b, c);
 			//importedNormals.push_back(scaling*translation*normal);
+			//vec4 temp = rotationMatrix*vec4(normal, 1.0);
+			//importedNormals.push_back(vec3(temp.x, temp.y, temp.z));
 			importedNormals.push_back(normal);
 		}
 		else if (strcmp(lineHeader, "f") == 0) {
-			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9) {
-				//int matches2 = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
-				//if (matches2 != 6) {
-				printf("File can't be read by our simple parser :( Try exporting with other options\n");
-				return -1;
-				//}
+			int vertexIndex[3], uvIndex[3], normalIndex[3];
+			if (hasTexture) {
+				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+				if (matches != 9) {
+					printf("File can't be read by our simple parser :( Try exporting with other options\n");
+					return -1;
+				}
 			}
+			else {
+				int matches2 = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
+				if (matches2 != 6) {
+					printf("File can't be read by our simple parser :( Try exporting with other options\n");
+					return -1;
+				}
+			}
+
 			points.push_back(importedVertices[vertexIndex[0] - 1]);
 			points.push_back(importedVertices[vertexIndex[1] - 1]);
 			points.push_back(importedVertices[vertexIndex[2] - 1]);
@@ -472,26 +426,96 @@ void addMetronomeCube() {
 	point4 * metronomeCubeVPointer = metronomeCubeVertices;
 	cubicInitializer(metronomeCubeVPointer);
 }
-float scaleMultiplier = 2;
+float scaleMultiplier = 2.2;
 int increasing = 1;
+int lastPlayPosition = 500; //time of the starting beat of the song in ms
 
+int lastLegitInputTime = lastPlayPosition;
+bool beat = false;
+int bpm = 100; //bpm of the song
 void updateMetronomeCube() {
 	//Fareye gore hareketini iyilestirmek icin biseyler yapmak lazim burda
 	cubePosition = position + 2 * (position - cubePosition)*direction;
-	// 0.75-2 scaling
-	if (scaleMultiplier >= 2) {
-		increasing = 0;
-	}
-	else if (scaleMultiplier <= 0.5) {
-		increasing = 1;
+
+	int msPerBeat = 60000 / bpm;
+	//To loop the song
+	if (vvvvvv->getPlayLength() <= vvvvvv->getPlayPosition() + msPerBeat * 3) {
+		vvvvvv->setPlayPosition(500);
+		lastPlayPosition = 500;
+		bool beat = false;
 	}
 
-	//VVVVVVV icin
-	if (increasing) {
-		scaleMultiplier += 0.001989*deltaTime;
+	/*if (vvvvvv->getPlayPosition() >= 16500) {
+	bpm = 200;
+	}*/
+
+	if (vvvvvv->getPlayPosition() - lastLegitInputTime > msPerBeat * 3 / 2) {
+		//Missed beat
+		bool temp = beat;
+		beat = false;
+		metronomeCubeHealth();
+		beat = temp;
+		lastLegitInputTime = vvvvvv->getPlayPosition();
+	}
+
+	if (vvvvvv->getPlayPosition() - lastPlayPosition >= msPerBeat * 2 / 3 && vvvvvv->getPlayPosition() - lastPlayPosition < msPerBeat * 4 / 3) {
+		beat = true;
+		if (gotInput) {
+			lastLegitInputTime = vvvvvv->getPlayPosition();
+		}
+		gotInput = false;
+	}
+	else if (vvvvvv->getPlayPosition() - lastPlayPosition > msPerBeat * 4 / 3) {
+		beat = false;
+		lastPlayPosition = vvvvvv->getPlayPosition() - ((vvvvvv->getPlayPosition() - lastPlayPosition) - msPerBeat);
+	}
+
+	if (beat) {
+		scaleMultiplier = 2.0;
 	}
 	else {
-		scaleMultiplier -= 0.001989*deltaTime;
+		scaleMultiplier -= 0.005*deltaTime;
+	}
+
+	/*if (vvvvvv->getPlayPosition() < 19500) {
+	// 0.75-2 scaling
+	if (scaleMultiplier >= 2) {
+	increasing = 0;
+	}
+	else if (scaleMultiplier <= 0.5) {
+	increasing = 1;
+	}
+
+	if (increasing) {
+	scaleMultiplier += 0.0045*deltaTime;
+	}
+	else {
+	scaleMultiplier -= 0.0045*deltaTime;
+	}
+	}*/
+	/*else {
+	// 0.75-2 scaling
+	if (scaleMultiplier >= 2) {
+	increasing = 0;
+	}
+	else if (scaleMultiplier <= 0.5) {
+	increasing = 1;
+	}
+
+	//VVVVVV icin
+	//if (increasing) {
+	//	scaleMultiplier += 0.001989*deltaTime;
+	//}
+	//else {
+	//	scaleMultiplier -= 0.001989*deltaTime;
+	//}
+
+	//00xx00 icin
+	if (increasing) {
+	scaleMultiplier += 0.01*deltaTime;
+	}
+	else {
+	scaleMultiplier -= 0.01*deltaTime;
 	}
 
 	//Paced Energy icin
@@ -501,7 +525,7 @@ void updateMetronomeCube() {
 	//else {
 	//	scaleMultiplier -= 0.002675*deltaTime;
 	//}
-
+	}*/
 
 	mat4 scalingMat = generateScaleMatrix(scaleMultiplier);
 	mat4 translationMat = generateTranslationMatrix(cubePosition.x, cubePosition.y, cubePosition.z);
@@ -523,27 +547,57 @@ void updateMetronomeCube() {
 	point4 * metronomeCubeVPointer = metronomeCubeVertices;
 	cubicUpdater(metronomeCubeVPointer, indexBeforeMetronome);
 }
-
+int surfaceBeforeIndex;
+vec4 surfaceVertices[4] = { generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(-0.5,  0.0,  0.5, 1.0),
+generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(0.5,  0.0,  0.5, 1.0),
+generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(-0.5,  0.0, -0.5, 1.0),
+generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(0.5,  0.0, -0.5, 1.0)
+};
 int cityIndex[6] = { 0,0,0,0,0,0 };
 int cityVerticeCount[6] = { 0,0,0,0,0,0 };
 float citiesTranslateXOffset = 15;
 float citiesTranslateYOffset = -15;
 float citiesTranslateZOffset = 15;
+int numbersIndex[10], numbersCount[10];
 void
 SetupBackground() {
-	cityIndex[0] = points.size();
-	cityVerticeCount[0] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.06 + citiesTranslateYOffset , 0.0 + citiesTranslateZOffset));
-	cityIndex[1] = points.size();
-	cityVerticeCount[1] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0),	generateTranslationMatrix(40.0 + citiesTranslateXOffset,	-15.05 + citiesTranslateYOffset, -40.0 + citiesTranslateZOffset));
-	cityIndex[2] = points.size();
-	cityVerticeCount[2] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0),	generateTranslationMatrix(0.0 + citiesTranslateXOffset,	-15.04 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
-	cityIndex[3] = points.size();
-	cityVerticeCount[3] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0),	generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.03 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset));
-	cityIndex[4] = points.size();
-	cityVerticeCount[4] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(-40.0 + citiesTranslateXOffset,-15.02 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
-	cityIndex[5] = points.size();
-	cityVerticeCount[5] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 0, 0),		generateTranslationMatrix(60.0 + citiesTranslateXOffset, -15.01 + citiesTranslateYOffset, -100.0 + citiesTranslateZOffset));
+	//Fill background surface
+	surfaceBeforeIndex = points.size();
+	quadInitializer(surfaceVertices, 3, 2, 0, 1);
 
+	cityIndex[0] = points.size();
+	cityVerticeCount[0] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0), generateTranslationMatrix(-40.0 + citiesTranslateXOffset, -15.06 + citiesTranslateYOffset, -180.0 + citiesTranslateZOffset), true);
+	cityIndex[1] = points.size();
+	cityVerticeCount[1] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0), generateTranslationMatrix(40.0 + citiesTranslateXOffset, -15.05 + citiesTranslateYOffset, -40.0 + citiesTranslateZOffset), true);
+	cityIndex[2] = points.size();
+	cityVerticeCount[2] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0), generateTranslationMatrix(0.0 + citiesTranslateXOffset, -15.04 + citiesTranslateYOffset, -80.0 + citiesTranslateZOffset), true);
+	cityIndex[3] = points.size();
+	cityVerticeCount[3] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 90, 0), generateTranslationMatrix(-60.0 + citiesTranslateXOffset, -15.03 + citiesTranslateYOffset, -210.0 + citiesTranslateZOffset), true);
+	cityIndex[4] = points.size();
+	cityVerticeCount[4] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 270, 0), generateTranslationMatrix(-20.0 + citiesTranslateXOffset, -15.02 + citiesTranslateYOffset, -120.0 + citiesTranslateZOffset), true);
+	cityIndex[5] = points.size();
+	cityVerticeCount[5] += importFromOBJ("TheCity.obj", generateScaleMatrix(0.05), generateRotationMatrix(0, 180, 0), generateTranslationMatrix(20.0 + citiesTranslateXOffset, -15.01 + citiesTranslateYOffset, -190.0 + citiesTranslateZOffset), true);
+
+	numbersIndex[0] = points.size();
+	numbersCount[0] = importFromOBJ("0.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[1] = points.size();
+	numbersCount[1] = importFromOBJ("1.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[2] = points.size();
+	numbersCount[2] = importFromOBJ("2.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[3] = points.size();
+	numbersCount[3] = importFromOBJ("3.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[4] = points.size();
+	numbersCount[4] = importFromOBJ("4.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[5] = points.size();
+	numbersCount[5] = importFromOBJ("5.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[6] = points.size();
+	numbersCount[6] = importFromOBJ("6.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[7] = points.size();
+	numbersCount[7] = importFromOBJ("7.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[8] = points.size();
+	numbersCount[8] = importFromOBJ("8.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
+	numbersIndex[9] = points.size();
+	numbersCount[9] = importFromOBJ("9.obj", generateScaleMatrix(1), generateRotationMatrix(0, 0, 0), generateTranslationMatrix(0, 0, 0), false);
 }
 /*void
 setStartLevel()
@@ -584,8 +638,31 @@ updateBuffers() {
 		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4)));
 }
 
+
+
 int bb8Index;
 int bb8VCount;
+
+
+bool musicStarted = false;
+void startMusic() {
+	if (musicStarted == false)
+	{
+		addMetronomeCube();
+		vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, true);
+		vvvvvv->setPlayPosition(500);
+		if (vvvvvv)
+			fx = vvvvvv->getSoundEffectControl();
+		if (!fx)
+		{
+			// some sound devices do not support sound effects.
+			printf("This device or sound does not support sound effects.\n");
+		}
+		musicStarted = true;
+	}
+
+}
+
 // OpenGL initialization
 void
 init()
@@ -593,17 +670,17 @@ init()
 	srand(static_cast <unsigned> (glutGet(GLUT_ELAPSED_TIME)));
 	point4 * cubeVPointer = cubeVertices;
 	cubicInitializer(cubeVPointer);
+	//Fill background surface
+	surfaceBeforeIndex = points.size();
+	quadInitializer(surfaceVertices, 3, 2, 0, 1);
 	playerCubeIndex = 0;
 	if (!engine)printf("could not start engine"); // 
 												  //setStartLevel();
 	importLevel("level1.txt");
-	addMetronomeCube();
+
 	bb8Index = points.size();
-	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(0.75), generateRotationMatrix(0, -25, 0), generateTranslationMatrix(-4.0, -0.65, -6.5));
+	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(0.75), generateRotationMatrix(0, -25, 0), generateTranslationMatrix(-4.0, -0.65, -6.5), true);
 	SetupBackground();
-
-	engine->play2D("presenting_vvvvvv.mp3", true);
-
 
 	// Create a vertex array object
 	GLuint vao;
@@ -852,6 +929,8 @@ drawPlatforms()
 			case 4: LevitatePlatform(i, j); updateLightProperties(color4(0.0, 1.0, 1.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //color changer - cyan
 			case 5: LevitatePlatform(i, j); updateLightProperties(color4(0.8, 0.8, 0.8, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //normal platform -grey
 			case 6: LevitatePlatform(i, j); updateLightProperties(color4(0.984, 0.855, 0.140, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //credits button -yellow
+			case 7: LevitatePlatform(i, j);	updateLightProperties(color4(1.0, 0.0, 0.0, 1.0)); /*updateLightProperties(platformHighlightColor[i][j])*/; glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //Highlighted Path - colored
+			case 8: LevitatePlatform(i, j); updateLightProperties(color4(0.298, 0.176, 0.749)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //Highlight Path Button -grey
 			}
 		}
 	}
@@ -1034,7 +1113,7 @@ InitializeLevel1()
 			addPlatformPiece(-2, -3, 1);	addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1); addPlatformPiece(6, -3, 1);
 			addPlatformPiece(-2, -2, 1);	addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1); addPlatformPiece(6, -2, 1);
 			addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);
-			addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 1);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);  addPlatformPiece(5, 0, 1);
+			addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 8);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);  addPlatformPiece(5, 0, 1);
 			addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1);
 
 			level1InitializeState = 2;
@@ -1090,14 +1169,204 @@ TurnCameraRight()
 		}
 	}
 }
+int addX = 0, addY = 0;
+int lastHighlightedPanel = 0;
+int tutorialPath[6] = { 8,8,6,6,5,6 };
+bool pathHiglighting;
+//void
+//HighlightPath(int path[6])
+//{
+//
+//	if (addX != 0 && addY != 0)
+//	{
+//		platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 1;
+//	}
+//
+//	switch (path[lastHighlightedPanel]) {
+//	case 4: addX += -1; addY += 0; break;
+//	case 8: addX += 0;	addY += -1;  break;
+//	case 6: addX += 1;	addY += 0;  break;
+//	case 5: addX += 0;	addY += 1;  break;
+//	}
+//		
+//	platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 7;
+//	lastHighlightedPanel++;
+//	if (lastHighlightedPanel == 6)
+//	{
+//		lastHighlightedPanel = 0;
+//		addX = 0, addY = 0;
+//	}
+//}
+//void
+//DrawHighlightPath(int path[6])
+//{
+//
+//	if (addX != 0 && addY != 0)
+//	{
+//		platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 1;
+//	}
+//
+//	switch (path[lastHighlightedPanel]) {
+//	case 4: addX += -1; addY += 0; break;
+//	case 8: addX += 0;	addY += -1;  break;
+//	case 6: addX += 1;	addY += 0;  break;
+//	case 5: addX += 0;	addY += 1;  break;
+//	}
+//
+//	platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 7;
+//	lastHighlightedPanel++;
+//	if (lastHighlightedPanel == 6)
+//	{
+//		lastHighlightedPanel = 0;
+//		addX = 0, addY = 0;
+//	}
+//}
+void
+HighlightPanel(int i, int j) {
+	i = i + sceneSize / 2; j = j + sceneSize / 2;
+	if (platformType[i][j] == 1)
+	{
+		platformType[i][j] = 7;
+		platformHiglightTicker[i][j] = 1;
+	}
+}
+void
+HandleHighlightedPanels()
+{
+	for (int i = 0; i < sceneSize; i++)
+	{
+		for (int j = 0; j < sceneSize; j++)
+		{
+			if (platformType[i][j] == 7)
+			{
+				float levitationDiff = 0.01 * deltaTime / 20;
+				int platformBufferIndex = platformIndex[i][j];
+				mat4 platformTranslationMatrix;
+				float levitateUpperLimit = (-0.6);
+
+				if ((points[platformBufferIndex + 1].y + levitationDiff) >= levitateUpperLimit && platformHiglightTicker[i][j] == 1)
+				{
+					float offset = levitateUpperLimit - (points[platformBufferIndex + 1].y + levitationDiff);
+					levitationDiff += offset;
+					platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
+					platformHiglightTicker[i][j] = 2;
+				}
+				if ((points[platformBufferIndex + 1].y - levitationDiff) <= -0.8 && platformHiglightTicker[i][j] == 2)
+				{
+					float offset = -0.8 - (points[platformBufferIndex + 1].y - levitationDiff);
+					levitationDiff -= offset;
+					platformTranslationMatrix = generateTranslationMatrix(0.0, -levitationDiff, 0.0);
+					platformHiglightTicker[i][j] = 0;
+					platformType[i][j] = 1;
+				}
+				if (platformHiglightTicker[i][j] == 1)
+				{
+					platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
+				}
+				if (platformHiglightTicker[i][j] == 2)
+				{
+					platformTranslationMatrix = generateTranslationMatrix(0.0, -levitationDiff, 0.0);
+				}
+
+				point4 platformPieceVertices[8] = {
+					points[platformBufferIndex + 1],
+					points[platformBufferIndex + 3],
+					points[platformBufferIndex + 5],
+					points[platformBufferIndex + 7],
+					points[platformBufferIndex + 14],
+					points[platformBufferIndex + 19],
+					points[platformBufferIndex + 11],
+					points[platformBufferIndex + 10]
+				};
+				for (int i = 0; i < 8; i++)
+				{
+					platformPieceVertices[i] = platformTranslationMatrix * platformPieceVertices[i];
+				}
+
+				point4 * cubeVPointer = platformPieceVertices;
+				cubicUpdater(cubeVPointer, platformIndex[i][j]);
+			}
+			else
+			{
+				continue;
+			}
+		}
+	}
+}
 
 
+float citiesYTranslate = 0;
+void
+DrawCities()
+{
+	mat4 s = generateScaleMatrix(1);
+	mat4 r = generateRotationMatrix(0, 0, 0);
+	mat4 t = generateTranslationMatrix(0, citiesYTranslate, 0); glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t*r*s);
+	glDrawArrays(GL_TRIANGLES, surfaceBeforeIndex, 6);
+	updateLightProperties(vec4(0.046875, 0.14453125, 0.22265625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[0], cityVerticeCount[0]);
+	updateLightProperties(vec4(0.24609375, 0.35546875, 0.44140625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[1], cityVerticeCount[1]);
+	updateLightProperties(vec4(0.39453125, 0.51953125, 0.609375, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[2], cityVerticeCount[2]);
+	updateLightProperties(vec4(0.59765625, 0.7265625, 0.80078125, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[3], cityVerticeCount[3]);
+	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[4], cityVerticeCount[4]);
+	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[5], cityVerticeCount[5]);
+}
+void
+DrawScore()
+{
+	updateLightProperties(vec4(1, 0.309, 0.035, 1.0));
+	int score = iScore;
+	mat4 s = generateScaleMatrix(90);
+	mat4 r = generateRotationMatrix(-90, 0, 0);
+	mat4 t = generateTranslationMatrix(50, 0, -350);
+	for (int place = 0; place < 3; place++) {
+		int digit = score % 10;
+		switch (place) {
+		case 0:	t = generateTranslationMatrix(175, 8, -350);	 break;
+		case 1:	t = generateTranslationMatrix(125, 8, -350);	 break;
+		case 2:	t = generateTranslationMatrix(75, 8, -350);	 break;
+		}
+		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t*r*s);
+		switch (digit) {
+		case 0:	glDrawArrays(GL_TRIANGLES, numbersIndex[0], numbersCount[0]);	 break;
+		case 1:	glDrawArrays(GL_TRIANGLES, numbersIndex[1], numbersCount[1]);	 break;
+		case 2:	glDrawArrays(GL_TRIANGLES, numbersIndex[2], numbersCount[2]);	 break;
+		case 3:	glDrawArrays(GL_TRIANGLES, numbersIndex[3], numbersCount[3]);	 break;
+		case 4:	glDrawArrays(GL_TRIANGLES, numbersIndex[4], numbersCount[4]);	 break;
+		case 5:	glDrawArrays(GL_TRIANGLES, numbersIndex[5], numbersCount[5]);	 break;
+		case 6:	glDrawArrays(GL_TRIANGLES, numbersIndex[6], numbersCount[6]);	 break;
+		case 7:	glDrawArrays(GL_TRIANGLES, numbersIndex[7], numbersCount[7]);	 break;
+		case 8:	glDrawArrays(GL_TRIANGLES, numbersIndex[8], numbersCount[8]);	 break;
+		case 9:	glDrawArrays(GL_TRIANGLES, numbersIndex[9], numbersCount[9]);	 break;
+		}
+		score /= 10;
+	} while (score > 0);
+}
+int scoreShownState = 0;
+void
+ShowScore() {
+	if (scoreShownState == 0)
+	{
+		citiesYTranslate -= 0.5;
+	}
+	if (citiesYTranslate == -50)
+	{
+		citiesYTranslate = -50;
+	}
+	if (scoreShownState == 2)
+	{
+
+	}
+}
 void
 DecideCurrentPlatformAction()
 {
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 2)
 	{
 		InitializeLevel1();
+	}
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 8)
+	{
+		HighlightPanel(2, -1); /*ShowScore();*/ startMusic();
 	}
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 6)
 	{
@@ -1128,6 +1397,14 @@ DecideCurrentPlatformAction()
 		MoveCube();
 	}
 }
+
+void calculateScore() {
+	int timeSpent = vvvvvv->getPlayPosition() - lastLegitInputTime;
+	fScore += ((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0001;
+	iScore = fScore;
+	printf("Score float: %f\t Score int: %d\n ", fScore, iScore);
+}
+
 //----------------------------------------------------------------------------
 void
 display(void)
@@ -1174,20 +1451,23 @@ display(void)
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
+	HandleHighlightedPanels();
 	drawPlatforms();
-	/*updateMetronomeCube();
-	drawMetronomeCube();*/
+	if (musicStarted) {
+		calculateScore();
+		updateMetronomeCube();
+		drawMetronomeCube();
+	}
 	RandomizeColor(bb8Color);
 	updateLightProperties(bb8Color);
 	glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
-	
 
-	updateLightProperties(vec4(0.046875, 0.14453125, 0.22265625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[1], cityVerticeCount[1]);
-	updateLightProperties(vec4(0.24609375, 0.35546875, 0.44140625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[2], cityVerticeCount[2]);
-	updateLightProperties(vec4(0.39453125, 0.51953125, 0.609375, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[3], cityVerticeCount[3]);
-	updateLightProperties(vec4(0.59765625, 0.7265625, 0.80078125, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[4], cityVerticeCount[4]);
-	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[5], cityVerticeCount[5]);
-	updateLightProperties(vec4(0.73828125, 0.84375, 0.91015625, 1.0)); glDrawArrays(GL_TRIANGLES, cityIndex[6], cityVerticeCount[6]);
+
+	/*DrawHighlightPath();*/
+	DrawCities();
+
+
+	DrawScore();
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
@@ -1205,67 +1485,75 @@ idle(void)
 
 int metronomeCubeHealth() {
 	//Return 0 means 0 health, return 1 means wrong button press, return 2 means correct button press
-	if (scaleMultiplier < 1.60) {
-		//Wrong button press
-		if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.99 && metronomeCubeColor.y <= 1.0) {
-			//Full health
-			metronomeCubeColor.x = 0.0;
-			metronomeCubeColor.y = 1.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y - 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+	if (musicStarted) {
+		gotInput = true;
+		//if (scaleMultiplier < 1.60) {
+		if (!beat) {
+			//Wrong button press
+			if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.99 && metronomeCubeColor.y <= 1.0) {
+				//Full health
+				metronomeCubeColor.x = 0.0;
+				metronomeCubeColor.y = 1.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y - 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.01 && metronomeCubeColor.y < 0.99) {
+				//Above half health but not full health
+				metronomeCubeColor.x = 0.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y - 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+				//Half health
+				metronomeCubeColor.x = 0.0;
+				metronomeCubeColor.y = 0.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x + 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x > 0.01 && metronomeCubeColor.x < 0.99 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+				//Below half health but not zero health
+				metronomeCubeColor.y = 0.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x + 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+				//Zero health
+				Respawn();
+				return 0;
+			}
+			return 2;
 		}
-		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.01 && metronomeCubeColor.y < 0.99) {
-			//Above half health but not full health
-			metronomeCubeColor.x = 0.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y - 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+		//else if (scaleMultiplier >= 1.60) {
+		else if (beat) {
+			//Correct button press
+			if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.99 && metronomeCubeColor.y <= 1.0) {
+				//Full health
+				metronomeCubeColor.x = 0.0;
+				metronomeCubeColor.y = 1.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.01 && metronomeCubeColor.y < 0.99) {
+				//Above half health but not full health
+				metronomeCubeColor.x = 0.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y + 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+				//Half health
+				metronomeCubeColor.x = 0.0;
+				metronomeCubeColor.y = 0.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y + 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x > 0.01 && metronomeCubeColor.x < 0.99 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+				//Below half health but not zero health
+				metronomeCubeColor.y = 0.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x - 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
+				//Zero health
+				metronomeCubeColor.x = 1.0;
+				metronomeCubeColor.y = 0.0;
+				metronomeCubeColor = vec4(metronomeCubeColor.x - 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
+			}
+			return 2;
 		}
-		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
-			//Half health
-			metronomeCubeColor.x = 0.0;
-			metronomeCubeColor.y = 0.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x + 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
-		}
-		else if (metronomeCubeColor.x > 0.01 && metronomeCubeColor.x < 0.99 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
-			//Below half health but not zero health
-			metronomeCubeColor.y = 0.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x + 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
-		}
-		else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
-			//Zero health
-			Respawn();
-			return 0;
-		}
-		return 2;
 	}
-	else if (scaleMultiplier >= 1.60) {
-		//Correct button press
-		if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.99 && metronomeCubeColor.y <= 1.0) {
-			//Full health
-			metronomeCubeColor.x = 0.0;
-			metronomeCubeColor.y = 1.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
-		}
-		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y > 0.01 && metronomeCubeColor.y < 0.99) {
-			//Above half health but not full health
-			metronomeCubeColor.x = 0.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y + 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
-		}
-		else if (metronomeCubeColor.x >= 0.0 && metronomeCubeColor.x < 0.01 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
-			//Half health
-			metronomeCubeColor.x = 0.0;
-			metronomeCubeColor.y = 0.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x, metronomeCubeColor.y + 0.2, metronomeCubeColor.z, metronomeCubeColor.w);
-		}
-		else if (metronomeCubeColor.x > 0.01 && metronomeCubeColor.x < 0.99 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
-			//Below half health but not zero health
-			metronomeCubeColor.y = 0.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x - 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
-		}
-		else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
-			//Zero health
-			metronomeCubeColor.x = 1.0;
-			metronomeCubeColor.y = 0.0;
-			metronomeCubeColor = vec4(metronomeCubeColor.x - 0.2, metronomeCubeColor.y, metronomeCubeColor.z, metronomeCubeColor.w);
-		}
+	else {
 		return 2;
 	}
 }
@@ -1275,7 +1563,7 @@ keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
 	case 033: // Escape Key
-	case 'q': case 'Q': engine->drop(); // delete engine
+		engine->drop(); // delete engine
 		exit(EXIT_SUCCESS);
 		break;
 	case 'w': case 'W': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'U'; if (turnTicker == true)playerCubeMoveDirection = 'R'; } break;
@@ -1288,6 +1576,7 @@ keyboard(unsigned char key, int x, int y)
 	case 't': case 'T': if (toonEnable == 0) { toonEnable = 1; }
 			  else if (toonEnable == 1) { toonEnable = 2; }
 			  else if (toonEnable == 2) { toonEnable = 0; } break;
+	case 'q': case 'Q': startMusic(); break;
 	case 'p': printf("positionX: %f, positionY: %f,positionZ: %f,horizontalAngle:%f\n verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", position.x, position.y, position.z, horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
 	}
 
