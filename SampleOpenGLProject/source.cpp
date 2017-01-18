@@ -2226,10 +2226,10 @@ main(int argc, char **argv)
 
 
 	// Create a tweak bar
-	TwWindowSize(200, 200);
+	TwWindowSize(200, 530);
 	bar = TwNewBar("BurakBar");
 	TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLUT and OpenGL.' "); // Message added to the help bar.
-	TwDefine(" BurakBar size='200 400' color='255 0 0' "); // change default tweak bar size and 
+	TwDefine(" BurakBar size='200 530' color='255 0 0' "); // change default tweak bar size and 
 														   // Add 'g_LightDirection' to 'bar': this is a variable of type TW_TYPE_DIR3F which defines the light direction
 	TwAddVarRW(bar, "LightDir", TW_TYPE_DIR3F, &light_info,
 		" label='Light direction' opened=true help='Change the light direction.' ");
@@ -2246,9 +2246,7 @@ main(int argc, char **argv)
 	// Add 'g_MatDiffuse' to 'bar': this is a variable of type TW_TYPE_COLOR3F (3 floats color, alpha is ignored)
 	// and is inserted into group 'Material'.
 	TwAddVarRW(bar, "Specular", TW_TYPE_COLOR3F, &light_specular_info, " group='Material' ");
-
-	TwAddVarCB(bar, "Directional", TW_TYPE_BOOL32, SetAlphaAttrib, GetAlphaAttrib, NULL,
-		" label='Directional' key=space help='Toggle auto-rotate mode.' ");
+	TwAddSeparator(bar, "sep1", NULL);
 
 	// Add 'g_Rotation' to 'bar': this is a variable of type TW_TYPE_QUAT4F which defines the object's orientation
 	TwAddVarRW(bar, "trooperRotation", TW_TYPE_QUAT4F, &trooper_Rotation,
