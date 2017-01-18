@@ -100,5 +100,10 @@ c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1762):
 c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1837): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
 c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1844): warning C4244: '=': conversion from 'const int' to 'float', possible loss of data
 c:\users\burak\desktop\yacube456164\yacube\sampleopenglproject\source.cpp(1770): warning C4715: 'metronomeCubeHealth': not all control paths return a value
+  LINK : C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\YaCube.exe not found or not built by the last incremental link; performing full link
+SOIL.lib(image_DXT.obj) : warning LNK4099: PDB 'SOIL.pdb' was not found with 'SOIL.lib(image_DXT.obj)' or at 'C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\SOIL.pdb'; linking object as if no debug info
+SOIL.lib(image_helper.obj) : warning LNK4099: PDB 'SOIL.pdb' was not found with 'SOIL.lib(image_helper.obj)' or at 'C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\SOIL.pdb'; linking object as if no debug info
+SOIL.lib(SOIL.obj) : warning LNK4099: PDB 'SOIL.pdb' was not found with 'SOIL.lib(SOIL.obj)' or at 'C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\SOIL.pdb'; linking object as if no debug info
+SOIL.lib(stb_image_aug.obj) : warning LNK4099: PDB 'SOIL.pdb' was not found with 'SOIL.lib(stb_image_aug.obj)' or at 'C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\SOIL.pdb'; linking object as if no debug info
   SampleOpenGLProject.vcxproj -> C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\YaCube.exe
   SampleOpenGLProject.vcxproj -> C:\Users\Burak\Desktop\Yacube456164\YaCube\Debug\YaCube.pdb (Full PDB)
