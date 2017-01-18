@@ -65,7 +65,7 @@ float temp_light_multiplier;
 float light_info[4] = { 1.31, -11.52, -14.69,0.0 };
 float light_ambient_info[3] = { 0.2, 0.2, 0.2 };
 float light_specular_info[3] = { 1.0, 1.0, 1.0 };
-float light_diffuse_info[3] = {1.0, 1.0, 1.0 };
+float light_diffuse_info[3] = { 1.0, 1.0, 1.0 };
 
 float trooper_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 float logo_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -469,12 +469,14 @@ void addMetronomeCube() {
 float scaleMultiplier = 2.2;
 int increasing = 1;
 int lastPlayPosition = 500; //time of the starting beat of the song in ms
-
+point4 centerOfPlayerCube;
 int lastLegitInputTime = lastPlayPosition;
 bool beat = false;
 int bpm = 100; //bpm of the song
 bool highlight3StepsAhead = false;
 void HighlightingPathAccordingtoMove();
+bool playerFollowingPath = false;
+int bpmSegmentsState = 0;
 bool musicIntro = false;
 bool musicStarted = false;
 void updateMetronomeCube() {
@@ -484,31 +486,69 @@ void updateMetronomeCube() {
 	if (musicIntro) {
 		if (vvvvvv->getPlayPosition() >= 17300) {  // 0xx00 speed up at 20.00 second
 			bpm = 20;
+			if (bpmSegmentsState == 0)
+			{
+				highlight3StepsAhead = false; playerFollowingPath = false;
+				bpmSegmentsState = 1;
+				HighlightingPathAccordingtoMove();
+			}
+
 		}
 
+		/*if (vvvvvv->getPlayPosition() >= 19000) {
+
+		}*/
 		if (vvvvvv->getPlayPosition() >= 19700) {  // 0xx00 speed up at 20.00 second
 			bpm = 200;
 			cubeRotationSpeed = 10;
+			if (bpmSegmentsState == 1)
+			{
+				highlight3StepsAhead = true;
+				bpmSegmentsState = 2;
+			}
 		}
 
 		if (vvvvvv->getPlayPosition() >= 38600) {  // 0xx00 speed up at 20.00 second
 			bpm = 100;
 			cubeRotationSpeed = 7;
+			if (bpmSegmentsState == 2)
+			{
+				highlight3StepsAhead = false;
+				bpmSegmentsState = 3;
+				HighlightingPathAccordingtoMove();
+			}
+
 		}
 
 		if (vvvvvv->getPlayPosition() >= 86900) {  // 0xx00 speed up at 20.00 second
 			bpm = 200;
 			cubeRotationSpeed = 10;
+			if (bpmSegmentsState == 3)
+			{
+				highlight3StepsAhead = true;
+				bpmSegmentsState = 4;
+			}
 		}
 
 		if (vvvvvv->getPlayPosition() >= 105900) {  // 0xx00 speed up at 20.00 second
 			bpm = 100;
 			cubeRotationSpeed = 7;
+			if (bpmSegmentsState == 5)
+			{
+				highlight3StepsAhead = false;
+				bpmSegmentsState = 6;
+				HighlightingPathAccordingtoMove();
+			}
 		}
 
 		if (vvvvvv->getPlayPosition() >= 105900 + 600 * 64) {  // 0xx00 speed up at 20.00 second
 			bpm = 200;
 			cubeRotationSpeed = 10;
+			if (bpmSegmentsState == 6)
+			{
+				highlight3StepsAhead = true;
+				bpmSegmentsState = 7;
+			}
 		}
 
 		int msPerBeat = 60000 / bpm;
@@ -666,7 +706,7 @@ updateBuffers() {
 	GLint texAttrib = glGetAttribLocation(program, "vTexCoord");
 	glEnableVertexAttribArray(texAttrib);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 0,
-	BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + texCoords.size() * sizeof(GLfloat)));
+		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + texCoords.size() * sizeof(GLfloat)));
 }
 
 
@@ -681,9 +721,29 @@ bool drawLogo = true;
 void startMusic() {
 	if (musicIntro == false)
 	{
-		vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, false);
-		vvvvvv->setPlayPosition(500);
-		musicIntro = true;
+		if (vvvvvv == NULL) {
+			vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, false);
+			vvvvvv->setPlayPosition(500);
+			musicIntro = true;
+		}
+		else {
+			vvvvvv->setIsPaused(false);
+			musicIntro = true;
+		}
+	}
+}
+
+void stopMusic() {
+	if (musicIntro == true)
+	{
+		if (menuMusic->getIsPaused()) {
+			vvvvvv->setIsPaused(true);
+			vvvvvv->setPlayPosition(500);
+			menuMusic->setPlayPosition(0);
+			menuMusic->setIsPaused(false);
+			musicIntro = false;
+			musicStarted = false;
+		}
 	}
 }
 
@@ -711,12 +771,12 @@ init()
 	if (!engine)printf("could not start engine"); // 
 												  //setStartLevel();
 	startMenuMusic();
-	addPlatformPiece(0, 0, 1);	
+	addPlatformPiece(0, 0, 1);
 	addMetronomeCube();
 	bb8Index = points.size();
 	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(1), generateRotationMatrix(0, -25, 0), generateTranslationMatrix(10, 0, 0), true);
 	logoIndex = points.size();
-	logoCount = importFromOBJ("yacube_logo.obj", generateScaleMatrix(60), generateRotationMatrix(-90, 0, 0), generateTranslationMatrix(110.0,0.0,-350.0), false);
+	logoCount = importFromOBJ("yacube_logo.obj", generateScaleMatrix(60), generateRotationMatrix(-90, 0, 0), generateTranslationMatrix(110.0, 0.0, -350.0), false);
 	SetupBackground();
 
 	//texture trial code
@@ -756,7 +816,7 @@ init()
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4), normals.size() * sizeof(vec3), &normals[0]);
 	//texture trial
 	glBufferSubData(GL_ARRAY_BUFFER, points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + normals.size() * sizeof(vec3), texCoords.size() * sizeof(GLfloat), &texCoords[0]);
-	
+
 	// Load shaders and use the resulting shader program
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
@@ -782,7 +842,7 @@ init()
 	glEnableVertexAttribArray(texAttrib);
 	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 0,
 		BUFFER_OFFSET(points.size() * sizeof(vec4) + colors.size() * sizeof(vec4) + texCoords.size() * sizeof(GLfloat)));
-	
+
 	initializeUniformVariables(program);
 
 	glEnable(GL_DEPTH_TEST); glShadeModel(GL_FLAT);
@@ -899,7 +959,7 @@ updateLightProperties(color4 baseObjectColor)
 
 	point4 centerOfPlayerCube =
 		(points[5] +
-		points[14])/2;
+			points[14]) / 2;
 	point4 light_position_2 = centerOfPlayerCube;
 
 	color4 ambient_product_2 = color4(0, 0.0, 0, 0) * material_ambient;
@@ -1055,6 +1115,8 @@ drawPlatforms()
 			case 6: LevitatePlatform(i, j); updateLightProperties(color4(0.984, 0.855, 0.140, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //credits button -yellow
 			case 7: LevitatePlatform(i, j);	updateLightProperties(color4(1.0, 0.0, 0.0, 1.0)); /*updateLightProperties(platformHighlightColor[i][j])*/; glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //Highlighted Path - colored
 			case 8: LevitatePlatform(i, j); updateLightProperties(color4(0.298, 0.176, 0.749)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //Highlight Path Button -grey
+			case 9: LevitatePlatform(i, j); updateLightProperties(color4(0.0, 1.0, 0.0, 1.0)); glDrawArrays(GL_TRIANGLES, platformIndex[i][j], 36); break; //return  menu button green
+
 			}
 		}
 	}
@@ -1072,7 +1134,6 @@ drawMetronomeCube()
 
 int comboCounter = 0;
 bool tutorialComplete = false;
-bool playerFollowingPath = false;
 int startMusicSequenceState = 0;
 void HighlightingPathAccordingtoMove();
 void
@@ -1130,7 +1191,11 @@ MoveCube()
 			}
 			if (tutorialComplete)
 			{
-				if (playerFollowingPath)
+				if (playerFollowingPath && !highlight3StepsAhead)
+				{
+					HighlightingPathAccordingtoMove();
+				}
+				if (highlight3StepsAhead)
 				{
 					HighlightingPathAccordingtoMove();
 				}
@@ -1277,11 +1342,11 @@ InitializeLevel1()
 			CleanRemovedPlatformTypes();
 			platformType[2 + sceneSize / 2][0 + sceneSize / 2] = 1;
 
-			addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1); 
-			addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1); 
-			addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);
-			addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 8);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);  addPlatformPiece(5, 0, 1);
-			addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1);
+			addPlatformPiece(-3, -3, 1); addPlatformPiece(-2, -3, 1); addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1);
+			addPlatformPiece(-3, -2, 1); addPlatformPiece(-2, -2, 1); addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1);
+			addPlatformPiece(-3, -1, 1); addPlatformPiece(-2, -1, 1); addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1);
+			addPlatformPiece(-3, 0, 1);	addPlatformPiece(-2, 0, 8);	addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 9);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);
+			addPlatformPiece(-3, 1, 1);	addPlatformPiece(-2, 1, 1);	addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);
 
 			level1InitializeState = 2;
 			updateBuffers();
@@ -1293,11 +1358,11 @@ void
 ExpandLevel1() {
 	addPlatformPiece(-3, -5, 1);	addPlatformPiece(-2, -5, 1);	addPlatformPiece(-1, -5, 1);	addPlatformPiece(0, -5, 1); addPlatformPiece(1, -5, 1);	addPlatformPiece(2, -5, 1);	addPlatformPiece(3, -5, 1);  addPlatformPiece(4, -5, 1);		addPlatformPiece(5, -5, 1);		addPlatformPiece(6, -5, 1);	addPlatformPiece(7, -5, 1);
 	addPlatformPiece(-3, -4, 1);	addPlatformPiece(-2, -4, 1);	addPlatformPiece(-1, -4, 1);	addPlatformPiece(0, -4, 1); addPlatformPiece(1, -4, 1);	addPlatformPiece(2, -4, 1);	addPlatformPiece(3, -4, 1);  addPlatformPiece(4, -4, 1);		addPlatformPiece(5, -4, 1);		addPlatformPiece(6, -4, 1); addPlatformPiece(7, -4, 1);
-	addPlatformPiece(-3, -3, 1);	addPlatformPiece(-2, -3, 1);/*addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1);*/		addPlatformPiece(6, -3, 1); addPlatformPiece(7, -3, 1);
-	addPlatformPiece(-3, -2, 1);	addPlatformPiece(-2, -2, 1);/*addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1);*/		addPlatformPiece(6, -2, 1); addPlatformPiece(7, -2, 1);
-	addPlatformPiece(-3, -1, 1);	addPlatformPiece(-2, -1, 1);/*addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);*/		addPlatformPiece(6, -1, 1); addPlatformPiece(7, -1, 1);
-	addPlatformPiece(-3, 0, 1);		addPlatformPiece(-2, 0, 1);	/*addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 8);	addPlatformPiece(1, 0, 1);addPlatformPiece(2, 0, 1);addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);		 addPlatformPiece(5, 0, 1);*/		addPlatformPiece(6, 0, 1);  addPlatformPiece(7, 0, 1);
-	addPlatformPiece(-3, 1, 1);		addPlatformPiece(-2, 1, 1);	/*addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1); */		addPlatformPiece(6, 1, 1);  addPlatformPiece(7, 1, 1);
+	/*addPlatformPiece(-3, -3, 1);	addPlatformPiece(-2, -3, 1);addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); */addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1);			addPlatformPiece(6, -3, 1); addPlatformPiece(7, -3, 1);
+	/*addPlatformPiece(-3, -2, 1);	addPlatformPiece(-2, -2, 1);addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); */addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1);			addPlatformPiece(6, -2, 1); addPlatformPiece(7, -2, 1);
+	/*addPlatformPiece(-3, -1, 1);	addPlatformPiece(-2, -1, 1);addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); */addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);			addPlatformPiece(6, -1, 1); addPlatformPiece(7, -1, 1);
+	/*addPlatformPiece(-3, 0, 1);		addPlatformPiece(-2, 0, 1);	addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 8);	addPlatformPiece(1, 0, 1);addPlatformPiece(2, 0, 1);addPlatformPiece(3, 0, 1);		*/addPlatformPiece(4, 0, 1); addPlatformPiece(5, 0, 1);			addPlatformPiece(6, 0, 1);  addPlatformPiece(7, 0, 1);
+	/*addPlatformPiece(-3, 1, 1);		addPlatformPiece(-2, 1, 1);	addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	*/addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1);			addPlatformPiece(6, 1, 1);  addPlatformPiece(7, 1, 1);
 	addPlatformPiece(-3, 2, 1);		addPlatformPiece(-2, 2, 1);	addPlatformPiece(-1, 2, 1);	addPlatformPiece(0, 2, 1); addPlatformPiece(1, 2, 1);	addPlatformPiece(2, 2, 1);	addPlatformPiece(3, 2, 1);  addPlatformPiece(4, 2, 1);		addPlatformPiece(5, 2, 1);			addPlatformPiece(6, 2, 1);	addPlatformPiece(7, 2, 1);
 	addPlatformPiece(-3, 3, 1);		addPlatformPiece(-2, 3, 1);	addPlatformPiece(-1, 3, 1);	addPlatformPiece(0, 3, 1); addPlatformPiece(1, 3, 1);	addPlatformPiece(2, 3, 1);	addPlatformPiece(3, 3, 1);  addPlatformPiece(4, 3, 1);		addPlatformPiece(5, 3, 1);			addPlatformPiece(6, 3, 1);	addPlatformPiece(7, 3, 1);
 
@@ -1313,10 +1378,11 @@ mouseClickHandler(int button, int state, int x, int y) {
 		case GLUT_LEFT_BUTTON:
 			mouseLocker = false;
 			glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
-		break;
+			break;
 		case GLUT_MIDDLE_BUTTON:
 			mouseLocker = true;
-			glutSetCursor(GLUT_CURSOR_NONE);}
+			glutSetCursor(GLUT_CURSOR_NONE);
+		}
 	}
 
 
@@ -1327,6 +1393,7 @@ mouseClickHandler(int button, int state, int x, int y) {
 void
 CalculateDeltaTime()
 {
+	centerOfPlayerCube = (points[5] + points[14]) / 2;
 	int oldTimeSinceStart = timeSinceStart;
 	timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
 	deltaTime = (timeSinceStart - oldTimeSinceStart);
@@ -1405,7 +1472,7 @@ int scoreUpTick = 6500;
 int lightsTick1 = 10200;
 int lightsTick2 = 10500;
 int lightsTick3 = 10550;
-int startHighlightTick = 10950; bool level1Expanded = false;
+int startHighlightTick = 12150; bool level1Expanded = false;
 
 float offsetForSwapping = 0; int addXm = 0, addYm = 0;
 void
@@ -1417,6 +1484,7 @@ HandleMusicSequence() {
 
 	if (startMusicSequenceState == 1)
 	{
+		platformType[25][25] = 1;
 		playerMovementLockToggle = false; // lock player during cutscene
 		timeTicker += deltaTime * 1;
 		if (timeTicker >= dangerSoundTick && timeTicker < songStartTick)
@@ -1424,7 +1492,7 @@ HandleMusicSequence() {
 			if (!dangerSoundPlayed)
 			{
 				engine->play2D("Danger.wav");
-				menuMusic->stop();
+				menuMusic->setIsPaused(true);
 				dangerSoundPlayed = true;
 			}
 			if (light_multiplier > 0.10)
@@ -1435,12 +1503,12 @@ HandleMusicSequence() {
 					light_multiplier = 0.10;
 				}
 			}
-			
+
 			/*pathHighlightTicker = 0;*/
 		}
 		if (timeTicker >= songStartTick && timeTicker < scoreUpTick)
 		{
-			platformType[25][25] = 1;
+			platformType[23][25] = 1;
 			/*glClearColor(1.0,0.0,0.0,1.0);*/
 			startMusic();
 			offsetForSwapping -= deltaTime * 0.02;
@@ -1464,7 +1532,7 @@ HandleMusicSequence() {
 				level1Expanded = true;
 			}
 
-		}		
+		}
 		if (timeTicker >= lightsTick1 && timeTicker < lightsTick2)
 		{
 			light_multiplier = 1.0;
@@ -1472,14 +1540,14 @@ HandleMusicSequence() {
 		if (timeTicker >= lightsTick2 && timeTicker < lightsTick3)
 		{
 			light_multiplier = 0.1;
-		}		
+		}
 		if (timeTicker >= lightsTick3 && timeTicker < startHighlightTick)
 		{
 			light_multiplier = 1.0;
 		}
 		if (timeTicker >= startHighlightTick)
 		{
-			addXm = (int)playerCubePos.x; addYm = (int)playerCubePos.y-1;
+			addXm = (int)playerCubePos.x; addYm = (int)playerCubePos.y - 1;
 			HighlightingPathAccordingtoMove();
 			playerMovementLockToggle = false;
 			startMusicSequenceState = 0;
@@ -1489,21 +1557,51 @@ HandleMusicSequence() {
 vector<int> musicPath = { 4,4,4,5,6,6,8,4,5,6,5,4,8,6,5,6,8,4,5,6,8,4,5,4,8,6,5,4,8,6,5,4,8 };
 
 
+int previousDirection = 3;
 int
 RandomDirection(int addXt, int addYt) {
-	int randomCase = 0;
-	randomCase = timeSinceStart % 4;
-	do
+	if (highlight3StepsAhead)
 	{
-		randomCase = (randomCase + 1) % 4;
-		switch (randomCase) {
-		case 0: addXt += -1; addYt += 0; break;
-		case 1: addXt += 0;	addYt += -1;  break;
-		case 2: addXt += 1;	addYt += 0;  break;
-		case 3: addXt += 0;	addYt += 1;  break;
+		int unwantedDirection = 0;
+		switch (previousDirection) {
+		case 0: unwantedDirection = 2; break;
+		case 1: unwantedDirection = 3;  break;
+		case 2: unwantedDirection = 0;  break;
+		case 3: unwantedDirection = 1;  break;
 		}
-	} while (platformType[addXt + sceneSize / 2][addYt + sceneSize / 2] == 0);
-	return randomCase;
+		int randomCase = 0;
+		randomCase = timeSinceStart % 4;
+		do
+		{
+			randomCase = (randomCase + 1) % 4;
+			switch (randomCase) {
+			case 0: addXt += -1; addYt += 0; break;
+			case 1: addXt += 0;	addYt += -1;  break;
+			case 2: addXt += 1;	addYt += 0;  break;
+			case 3: addXt += 0;	addYt += 1;  break;
+			}
+		} while (platformType[addXt + sceneSize / 2][addYt + sceneSize / 2] == 0 || randomCase == unwantedDirection);
+		previousDirection = randomCase;
+		return randomCase;
+	}
+	else
+	{
+		int randomCase = 0;
+		randomCase = timeSinceStart % 4;
+		do
+		{
+			randomCase = (randomCase + 1) % 4;
+			switch (randomCase) {
+			case 0: addXt += -1; addYt += 0; break;
+			case 1: addXt += 0;	addYt += -1;  break;
+			case 2: addXt += 1;	addYt += 0;  break;
+			case 3: addXt += 0;	addYt += 1;  break;
+			}
+		} while (platformType[addXt + sceneSize / 2][addYt + sceneSize / 2] == 0);
+		previousDirection = randomCase;
+		return randomCase;
+	}
+
 }
 bool RandomPath = true;
 void
@@ -1511,10 +1609,10 @@ HighlightingPathAccordingtoMove() {
 	if (!RandomPath)
 	{
 		switch (musicPath[panelToHighlight]) {
-		case 4: addXm += -1;addYm += 0; break;
-		case 8: addXm += 0;	addYm+= -1;  break;
-		case 6: addXm += 1;	addYm+= 0;  break;
-		case 5: addXm += 0;	addYm+= 1;  break;
+		case 4: addXm += -1; addYm += 0; break;
+		case 8: addXm += 0;	addYm += -1;  break;
+		case 6: addXm += 1;	addYm += 0;  break;
+		case 5: addXm += 0;	addYm += 1;  break;
 		}
 		HighlightPanel(addXm, addYm);
 
@@ -1554,8 +1652,8 @@ HighlightingPath() {
 			case 6: addX += 1;	addY += 0;  break;
 			case 5: addX += 0;	addY += 1;  break;
 			}
-			HighlightPanel(addX,addY);
-			
+			HighlightPanel(addX, addY);
+
 			panelToHighlight++;
 			if (panelToHighlight == tutorialPath.size())
 			{
@@ -1571,6 +1669,14 @@ HighlightingPath() {
 void
 HandleHighlightedPanels()
 {
+	if (highlight3StepsAhead)
+	{
+		highlightPathSpeed = 0.1;
+	}
+	if (!highlight3StepsAhead)
+	{
+		highlightPathSpeed = 0.5;
+	}
 	for (int i = 0; i < sceneSize; i++)
 	{
 		for (int j = 0; j < sceneSize; j++)
@@ -1588,7 +1694,8 @@ HandleHighlightedPanels()
 					levitationDiff += offset;
 					if ((points[platformBufferIndex + 1].y + levitationDiff) >= (-0.7) && highlight3StepsAhead)
 					{
-						HighlightingPathAccordingtoMove();
+						/*HighlightingPathAccordingtoMove();*/
+
 					}
 					platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
 					platformHiglightTicker[i][j] = 2;
@@ -1667,9 +1774,9 @@ DrawScore()
 	for (int place = 0; place < 4; place++) {
 		int digit = score % 10;
 		switch (place) {
-		case 0:	t = generateTranslationMatrix(scaleXOffset +150, 8 + offsetForSwapping, -350);	 break;
-		case 1:	t = generateTranslationMatrix(scaleXOffset +100, 8 + offsetForSwapping, -350);	 break;
-		case 2:	t = generateTranslationMatrix(scaleXOffset +50, 8 + offsetForSwapping, -350);	 break;
+		case 0:	t = generateTranslationMatrix(scaleXOffset + 150, 8 + offsetForSwapping, -350);	 break;
+		case 1:	t = generateTranslationMatrix(scaleXOffset + 100, 8 + offsetForSwapping, -350);	 break;
+		case 2:	t = generateTranslationMatrix(scaleXOffset + 50, 8 + offsetForSwapping, -350);	 break;
 		case 3:	t = generateTranslationMatrix(scaleXOffset, 8 + offsetForSwapping, -350);	 break;
 		}
 		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t * generateRotationMatrix(score_Rotation[0] * multiplier, score_Rotation[1] * multiplier, score_Rotation[2] * multiplier)  * s);
@@ -1694,7 +1801,7 @@ HandleShowScoreHeight() {
 	if (scoreShownState == 0)
 	{
 		return;
-	}	
+	}
 	if (scoreShownState == 2)
 	{
 		return;
@@ -1748,13 +1855,51 @@ InitMenu() {
 	}
 }
 
+void
+DeathSequence() {
+	stopMusic();
+	highlightState = 0;
+	RemoveAllPlatforms(); RemovePlatformPiece(playerCubePos.x, playerCubePos.y);
+	updateBuffers();
+}
+
+void
+SongFinishedSequence() {
+	scoreShownState = 1;
+	addPlatformPiece(0, 0, 9);
+}
 
 void
 DecideCurrentPlatformAction()
 {
+	if (centerOfPlayerCube.y < -250)
+	{
+		cubeRotationSpeed = 0.7;
+		int timeTicker = 0;
+		int panelToHighlight = 0;
+		vector<int> tutorialPath = { 8,8,6,6,5,6 };
+		int highlightState = 0;
+		int addX = 0, addY = 0;
+		stopMusic();
+		float pathHighlightTicker = 0;
+		tutorialComplete = false;
+		Respawn();
+		menuInitialized = false;
+		level1InitializeState = 0;
+		RemoveAllPlatforms(); addPlatformPiece(0, 0, 1);
+		InitMenu();
+	}
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 2)
 	{
 		InitializeLevel1();
+	}
+	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 9)
+	{
+		scoreShownState = 3;
+		menuInitialized = false;
+		level1InitializeState = 0;
+		RemoveAllPlatforms(); addPlatformPiece(0, 0, 1);
+		InitMenu();
 	}
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 8)
 	{
@@ -1930,9 +2075,9 @@ int metronomeCubeHealth() {
 			}
 			else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
 				//Zero health
-				/*Respawn();*/
+				DeathSequence();
 				/*return 0;*/
-				
+
 			}
 			return 2;
 		}
@@ -1995,8 +2140,6 @@ keyboard(unsigned char key, int x, int y)
 		case 't': case 'T': if (toonEnable == 0) { toonEnable = 1; }
 				  else if (toonEnable == 1) { toonEnable = 2; }
 				  else if (toonEnable == 2) { toonEnable = 0; } break;
-		case 'q': case 'Q': /*startMusic();*/ scoreShownState = 1; break;
-		case 'e': case 'E': /*startMusic();*/ scoreShownState = 3; break;
 		case 'p': printf("positionX: %f, positionY: %f,positionZ: %f,horizontalAngle:%f\n verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", position.x, position.y, position.z, horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
 		}
 	}
@@ -2158,7 +2301,7 @@ main(int argc, char **argv)
 	);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 
-	window_id = glutCreateWindow("Experiment 4 - Cem Aslan 21426639");
+	window_id = glutCreateWindow("YaCuBe");
 	glutCreateMenu(NULL);
 
 	glewExperimental = GL_TRUE;
@@ -2209,10 +2352,10 @@ main(int argc, char **argv)
 
 
 	// Create a tweak bar
-	TwWindowSize(200, 575);
-	bar = TwNewBar("BurakBar");
+	TwWindowSize(200, 595);
+	bar = TwNewBar("YaCubeUi");
 	TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLUT and OpenGL.' "); // Message added to the help bar.
-	TwDefine(" BurakBar size='200 575' color='255 0 0' "); // change default tweak bar size and 
+	TwDefine(" BurakBar size='200 595' color='255 0 0' "); // change default tweak bar size and 
 														   // Add 'g_LightDirection' to 'bar': this is a variable of type TW_TYPE_DIR3F which defines the light direction
 	TwAddVarRW(bar, "LightDir", TW_TYPE_DIR3F, &light_info,
 		" label='Light direction' opened=true help='Change the light direction.' ");
