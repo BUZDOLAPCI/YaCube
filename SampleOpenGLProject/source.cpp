@@ -70,6 +70,10 @@ float trooper_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 float logo_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 float score_Rotation[] = { -0.47f, 0.0f, 0.04f, 1.0f };
 
+int new_platform_x = 1;
+int new_platform_y = 1;
+int new_platform_type = 1;
+
 //texture trial
 GLuint textured;
 vector<GLfloat> texCoords = { //WIP
@@ -2068,6 +2072,14 @@ void TW_CALL trooperTrigger(void * /*clientData*/)
 	}
 }
 
+void TW_CALL newPlatform(void * /*clientData*/)
+{
+
+	addPlatformPiece(new_platform_x, new_platform_y,new_platform_type);
+	updateBuffers();
+}
+
+
 void TW_CALL Reset(void * /*clientData*/)
 {
 	light_info[0] = 1.31;
@@ -2226,10 +2238,10 @@ main(int argc, char **argv)
 
 
 	// Create a tweak bar
-	TwWindowSize(200, 530);
+	TwWindowSize(200, 575);
 	bar = TwNewBar("BurakBar");
 	TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLUT and OpenGL.' "); // Message added to the help bar.
-	TwDefine(" BurakBar size='200 530' color='255 0 0' "); // change default tweak bar size and 
+	TwDefine(" BurakBar size='200 575' color='255 0 0' "); // change default tweak bar size and 
 														   // Add 'g_LightDirection' to 'bar': this is a variable of type TW_TYPE_DIR3F which defines the light direction
 	TwAddVarRW(bar, "LightDir", TW_TYPE_DIR3F, &light_info,
 		" label='Light direction' opened=true help='Change the light direction.' ");
@@ -2260,7 +2272,13 @@ main(int argc, char **argv)
 		" label='Light booster' min=0.1 max=4 step=0.02 keyIncr='+' keyDecr='-' help='Increase/decrease the light power.' ");
 
 	TwAddButton(bar, "Reset", Reset, NULL, " label='Reset' help='Re-initialize rotation variables and multipliers.' ");
-	TwAddButton(bar, "Trooper", trooperTrigger, NULL, " label='Trooper' help='Re-initialize rotation variables and multipliers.' ");
+	TwAddButton(bar, "Trooper", trooperTrigger, NULL, " label='Trooper' help='Toogle trooper.' ");
+	TwAddSeparator(bar, "sep1", NULL);
+
+	TwAddVarRW(bar, "X", TW_TYPE_INT32, &new_platform_x, "label='Platform X' group='Platform' ");
+	TwAddVarRW(bar, "Y", TW_TYPE_INT32, &new_platform_y, "label='Platform Y' group='Platform' ");
+	TwAddVarRW(bar, "Type", TW_TYPE_INT32, &new_platform_type, "label='Platform Type' group='Platform' ");
+	TwAddButton(bar, "NewPlatform", newPlatform, NULL, " group='Platform' min=1 max=4  label='Add Platform' help='Adds new platform to given parameters.' ");
 
 
 	glutMainLoop();
