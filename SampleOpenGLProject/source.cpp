@@ -55,7 +55,7 @@ bool playerMovementLockToggle = false;
 bool mouseLocker = true;
 
 float light_multiplier = 1.0f;
-float light_info[4] = { 1.31, -11.52, -14.69,1.0 };
+float light_info[4] = { 1.31, -11.52, -14.69,0.0 };
 float light_ambient_info[3] = { 0.2, 0.2, 0.2 };
 float light_specular_info[3] = { 1.0, 1.0, 1.0 };
 float light_diffuse_info[3] = {1.0, 1.0, 1.0 };
@@ -251,6 +251,10 @@ GLuint ambientProduct;
 GLuint diffuseProduct;
 GLuint specularProduct;
 GLuint lightPosition;
+GLuint ambientProduct_2;
+GLuint diffuseProduct_2;
+GLuint specularProduct_2;
+GLuint lightPosition_2;
 GLuint shininess;
 
 //----------------------------------------------------------------------------
@@ -800,6 +804,10 @@ initializeUniformVariables(GLuint program) {
 	diffuseProduct = glGetUniformLocation(program, "DiffuseProduct");
 	specularProduct = glGetUniformLocation(program, "SpecularProduct");
 	lightPosition = glGetUniformLocation(program, "LightPosition");
+	ambientProduct_2 = glGetUniformLocation(program, "AmbientProduct2");
+	diffuseProduct_2 = glGetUniformLocation(program, "DiffuseProduct2");
+	specularProduct_2 = glGetUniformLocation(program, "SpecularProduct2");
+	lightPosition_2 = glGetUniformLocation(program, "LightPosition2");
 	shininess = glGetUniformLocation(program, "Shininess");
 	model_view = glGetUniformLocation(program, "model_view");
 	normal_matrix = glGetUniformLocation(program, "normal_matrix");
@@ -888,6 +896,7 @@ updateLightProperties(color4 baseObjectColor)
 	light_ambient = light_ambient * light_multiplier; light_ambient[3] = 1.0;
 	light_diffuse = light_diffuse * light_multiplier; light_diffuse[3] = 1.0;
 	light_specular = light_specular * light_multiplier; light_specular[3] = 1.0;
+
 	color4 material_ambient(1.0, 1.0, 1.0, 1.0);
 	color4 material_diffuse = baseObjectColor;
 	color4 material_specular = baseObjectColor;
@@ -897,11 +906,24 @@ updateLightProperties(color4 baseObjectColor)
 	color4 diffuse_product = light_diffuse * material_diffuse;
 	color4 specular_product = light_specular * material_specular;
 
+
+	point4 light_position_2(playerCubePos.x, 1, playerCubePos.y, 1.0);
+
+	color4 ambient_product_2 = light_ambient * material_ambient;
+	color4 diffuse_product_2 = color4(0,1.0,0,0) * material_diffuse;
+	color4 specular_product_2 = light_specular * material_specular;
+
 	glUniform4fv(ambientProduct, 1, ambient_product);
 	glUniform4fv(diffuseProduct, 1, diffuse_product);
 	glUniform4fv(specularProduct, 1, specular_product);
 
+	glUniform4fv(ambientProduct_2, 1, ambient_product_2);
+	glUniform4fv(diffuseProduct_2, 1, diffuse_product_2);
+	glUniform4fv(specularProduct_2, 1, specular_product_2);
+
 	glUniform4fv(lightPosition, 1, light_position);
+	glUniform4fv(lightPosition_2, 1, light_position_2);
+
 
 	glUniform1f(shininess, material_shininess);
 
