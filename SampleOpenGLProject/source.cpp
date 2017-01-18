@@ -56,6 +56,7 @@ char playerCubeMoveDirection;
 bool freecamToggle = false;
 bool playerMovementLockToggle = false;
 bool mouseLocker = true;
+bool trooperExist = 0;
 
 float light_multiplier = 1.0f;
 float light_multiplier2 = 1.0f;
@@ -66,8 +67,8 @@ float light_specular_info[3] = { 1.0, 1.0, 1.0 };
 float light_diffuse_info[3] = {1.0, 1.0, 1.0 };
 
 float trooper_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-int trooper_RotateTime = 0;
-float trooper_RotateStart[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+float logo_Rotation[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+float score_Rotation[] = { -0.47f, 0.0f, 0.04f, 1.0f };
 
 //texture trial
 GLuint textured;
@@ -1696,6 +1697,7 @@ void
 DrawScore()
 {
 	updateLightProperties(vec4(1, 0.309, 0.035, 1.0));
+	int multiplier = 180;
 	int score = iScore;
 	int scaleXOffset = 35;
 	mat4 s = generateScaleMatrix(90);
@@ -1709,7 +1711,7 @@ DrawScore()
 		case 2:	t = generateTranslationMatrix(scaleXOffset +50, 8 + offsetForSwapping, -350);	 break;
 		case 3:	t = generateTranslationMatrix(scaleXOffset, 8 + offsetForSwapping, -350);	 break;
 		}
-		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t*r*s);
+		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t * generateRotationMatrix(score_Rotation[0] * multiplier, score_Rotation[1] * multiplier, score_Rotation[2] * multiplier)  * s);
 		switch (digit) {
 		case 0:	glDrawArrays(GL_TRIANGLES, numbersIndex[0], numbersCount[0]);	 break;
 		case 1:	glDrawArrays(GL_TRIANGLES, numbersIndex[1], numbersCount[1]);	 break;
@@ -1881,29 +1883,32 @@ display(void)
 		updateMetronomeCube();
 		drawMetronomeCube();
 	}
-
 	float multiplier = 180;
-	glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(10, 0, 0) * generateRotationMatrix(trooper_Rotation[0] * multiplier, trooper_Rotation[1] * multiplier, trooper_Rotation[2] * multiplier) * generateTranslationMatrix(-10, 0, 0));
-	RandomizeColor(bb8Color);
-	updateLightProperties(bb8Color);
-	glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
-	r = generateRotationMatrix(0, 0, 0);
-	glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, r);
+	if (trooperExist) {
+		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(10, 0, 0) * generateRotationMatrix(trooper_Rotation[0] * multiplier, trooper_Rotation[1] * multiplier, trooper_Rotation[2] * multiplier) * generateTranslationMatrix(-10, 0, 0));
+		RandomizeColor(bb8Color);
+		updateLightProperties(bb8Color);
+		glDrawArrays(GL_TRIANGLES, bb8Index, bb8VCount);
+		r = generateRotationMatrix(0, 0, 0);
+		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, r);
+	}
 
 
 	/*DrawHighlightPath();*/
 	DrawCities();
-
 	if (drawLogo == true)
 	{
-		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(0, offsetForSwapping,0));
-		updateLightProperties(vec4(1, 0, 0.501,1.0));
+		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(110.0, 0.0, -350.0) * generateRotationMatrix(logo_Rotation[0] * multiplier, logo_Rotation[1] * multiplier, logo_Rotation[2] * multiplier) * generateTranslationMatrix(-110.0, 0.0, 350.0));
+		updateLightProperties(vec4(1, 0, 0.501, 1.0));
 		glDrawArrays(GL_TRIANGLES, logoIndex, logoCount);
 	}
 	else
 	{
+		//glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(50, 0, -350) * generateRotationMatrix(logo_Rotation[0] * multiplier, logo_Rotation[1] * multiplier, logo_Rotation[2] * multiplier) * generateTranslationMatrix(-50, 0, +350));
 		DrawScore();
 	}
+	r = generateRotationMatrix(0, 0, 0);
+	glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, r);
 
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(vec4), &points[0]);
@@ -2051,6 +2056,31 @@ reshape(int width, int height)
 	aspect = GLfloat(width) / height;
 	TwWindowSize(width, height);
 
+}
+void TW_CALL trooperTrigger(void * /*clientData*/)
+{
+
+	if (trooperExist) {
+		trooperExist = false;
+	}
+	else {
+		trooperExist = true;
+	}
+}
+
+void TW_CALL Reset(void * /*clientData*/)
+{
+	light_info[0] = 1.31;
+	light_info[1] = -11.52;
+	light_info[2] = -14.69;
+	trooper_Rotation[0] = trooper_Rotation[1] = trooper_Rotation[2] = 0.0f;
+	trooper_Rotation[3] = 1.0f;
+	logo_Rotation[0] = logo_Rotation[1] = logo_Rotation[2] = 0.0f;
+	logo_Rotation[3] = 1.0f;
+	score_Rotation[0] = -0.47f; score_Rotation[1] = 0.0f; score_Rotation[2] = 0.04f;
+	score_Rotation[3] = 1.0f;
+	light_multiplier = 1.0f;
+	trooperExist = false;
 }
 
 // Function called at exit
@@ -2221,11 +2251,18 @@ main(int argc, char **argv)
 		" label='Directional' key=space help='Toggle auto-rotate mode.' ");
 
 	// Add 'g_Rotation' to 'bar': this is a variable of type TW_TYPE_QUAT4F which defines the object's orientation
-	TwAddVarRW(bar, "ObjRotation", TW_TYPE_QUAT4F, &trooper_Rotation,
-		" label='Object rotation' opened=true help='Change the object orientation.' ");
+	TwAddVarRW(bar, "trooperRotation", TW_TYPE_QUAT4F, &trooper_Rotation,
+		" label='Trooper rotation' opened=true help='Change the object orientation.' ");
+	TwAddVarRW(bar, "logoRotation", TW_TYPE_QUAT4F, &logo_Rotation,
+		" label='Logo rotation' opened=true help='Change the object orientation.' ");
+	TwAddVarRW(bar, "scoreRotation", TW_TYPE_QUAT4F, &score_Rotation,
+		" label='Score rotation' opened=true help='Change the object orientation.' ");
 	// Add 'g_LightMultiplier' to 'bar': this is a variable of type TW_TYPE_FLOAT. Its key shortcuts are [+] and [-].
 	TwAddVarRW(bar, "Multiplier", TW_TYPE_FLOAT, &light_multiplier,
 		" label='Light booster' min=0.1 max=4 step=0.02 keyIncr='+' keyDecr='-' help='Increase/decrease the light power.' ");
+
+	TwAddButton(bar, "Reset", Reset, NULL, " label='Reset' help='Re-initialize rotation variables and multipliers.' ");
+	TwAddButton(bar, "Trooper", trooperTrigger, NULL, " label='Trooper' help='Re-initialize rotation variables and multipliers.' ");
 
 
 	glutMainLoop();
