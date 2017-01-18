@@ -39,6 +39,7 @@ GLfloat  ortho_zNear = 0.5, ortho_zFar = 3.0;											//							  `---'
 irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice(); // initialize sound engine
 irrklang::ISoundEffectControl* fx = 0;
 irrklang::ISound* vvvvvv;
+irrklang::ISound* menuMusic;
 const int NumVertices = 36 * 2; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 int timeSinceStart; int deltaTime;
 void initializeUniformVariables(GLuint program);
@@ -60,7 +61,7 @@ bool trooperExist = 0;
 
 float light_multiplier = 1.0f;
 float light_multiplier2 = 1.0f;
-
+float temp_light_multiplier;
 float light_info[4] = { 1.31, -11.52, -14.69,0.0 };
 float light_ambient_info[3] = { 0.2, 0.2, 0.2 };
 float light_specular_info[3] = { 1.0, 1.0, 1.0 };
@@ -72,7 +73,6 @@ float score_Rotation[] = { -0.47f, 0.0f, 0.04f, 1.0f };
 
 int new_platform_x = 1;
 int new_platform_y = 1;
-int new_platform_type = 1;
 
 //texture trial
 GLuint textured;
@@ -475,131 +475,85 @@ bool beat = false;
 int bpm = 100; //bpm of the song
 bool highlight3StepsAhead = false;
 void HighlightingPathAccordingtoMove();
+bool musicIntro = false;
+bool musicStarted = false;
 void updateMetronomeCube() {
 	//Fareye gore hareketini iyilestirmek icin biseyler yapmak lazim burda
 	cubePosition = position + 2 * (position - cubePosition)*direction;
 
-	if (vvvvvv->getPlayPosition() >= 17300) {  // 0xx00 speed up at 20.00 second
-		bpm = 20;
-	}
+	if (musicIntro) {
+		if (vvvvvv->getPlayPosition() >= 17300) {  // 0xx00 speed up at 20.00 second
+			bpm = 20;
+		}
 
-	if (vvvvvv->getPlayPosition() >= 19700) {  // 0xx00 speed up at 20.00 second
-		bpm = 200; highlight3StepsAhead = true; HighlightingPathAccordingtoMove();
-		cubeRotationSpeed = 10;
-	}
+		if (vvvvvv->getPlayPosition() >= 19700) {  // 0xx00 speed up at 20.00 second
+			bpm = 200;
+			cubeRotationSpeed = 10;
+		}
 
-	if (vvvvvv->getPlayPosition() >= 38600) {  // 0xx00 speed up at 20.00 second
-		bpm = 100; highlight3StepsAhead = false;
-		cubeRotationSpeed = 7;
-	}
+		if (vvvvvv->getPlayPosition() >= 38600) {  // 0xx00 speed up at 20.00 second
+			bpm = 100;
+			cubeRotationSpeed = 7;
+		}
 
-	if (vvvvvv->getPlayPosition() >= 86900) {  // 0xx00 speed up at 20.00 second
-		bpm = 200; highlight3StepsAhead = true; HighlightingPathAccordingtoMove();
-		cubeRotationSpeed = 10;
-	}
+		if (vvvvvv->getPlayPosition() >= 86900) {  // 0xx00 speed up at 20.00 second
+			bpm = 200;
+			cubeRotationSpeed = 10;
+		}
 
-	if (vvvvvv->getPlayPosition() >= 105900) {  // 0xx00 speed up at 20.00 second
-		bpm = 100; highlight3StepsAhead = false;
-		cubeRotationSpeed = 7;
-	}
+		if (vvvvvv->getPlayPosition() >= 105900) {  // 0xx00 speed up at 20.00 second
+			bpm = 100;
+			cubeRotationSpeed = 7;
+		}
 
-	if (vvvvvv->getPlayPosition() >= 105900 + 600 * 64) {  // 0xx00 speed up at 20.00 second
-		bpm = 200; highlight3StepsAhead = true; HighlightingPathAccordingtoMove();
-		cubeRotationSpeed = 10;
-	}
+		if (vvvvvv->getPlayPosition() >= 105900 + 600 * 64) {  // 0xx00 speed up at 20.00 second
+			bpm = 200;
+			cubeRotationSpeed = 10;
+		}
 
-	int msPerBeat = 60000 / bpm;
+		int msPerBeat = 60000 / bpm;
 
-	//To loop the song
-	if (vvvvvv->getPlayLength() <= vvvvvv->getPlayPosition() + msPerBeat * 3) {
-		vvvvvv->setPlayPosition(500);
-		lastPlayPosition = 500;
-		cubeRotationSpeed = 7;
-		bpm = 100;
-		bool beat = false;
-	}
+		//To loop the song
+		if (vvvvvv->getPlayLength() <= vvvvvv->getPlayPosition() + msPerBeat * 3) {
+			vvvvvv->setPlayPosition(500);
+			lastPlayPosition = 500;
+			cubeRotationSpeed = 7;
+			bpm = 100;
+			bool beat = false;
+		}
 
-	if (vvvvvv->getPlayPosition() - lastLegitInputTime > msPerBeat * 3 / 2) {
-		//Missed beat
-		bool temp = beat;
-		beat = false;
-		metronomeCubeHealth();
-		beat = temp;
-		lastLegitInputTime = vvvvvv->getPlayPosition();
-	}
-
-	if (vvvvvv->getPlayPosition() - lastPlayPosition >= msPerBeat * 3 / 4 && vvvvvv->getPlayPosition() - lastPlayPosition < msPerBeat * 5 / 4) {
-		beat = true;
-		if (gotInput) {
+		if (vvvvvv->getPlayPosition() - lastLegitInputTime > msPerBeat * 3 / 2) {
+			//Missed beat
+			bool temp = beat;
+			beat = false;
+			metronomeCubeHealth();
+			beat = temp;
 			lastLegitInputTime = vvvvvv->getPlayPosition();
 		}
-		gotInput = false;
-	}
-	else if (vvvvvv->getPlayPosition() - lastPlayPosition > msPerBeat * 5 / 4) {
-		beat = false;
-		lastPlayPosition = vvvvvv->getPlayPosition() - ((vvvvvv->getPlayPosition() - lastPlayPosition) - msPerBeat);
-	}
 
-	if (beat) {
-		scaleMultiplier = 2.0;
-	}
-	else {
-		scaleMultiplier -= 0.005*deltaTime;
-	}
+		if (vvvvvv->getPlayPosition() - lastPlayPosition >= msPerBeat * 3 / 4 && vvvvvv->getPlayPosition() - lastPlayPosition < msPerBeat * 5 / 4) {
+			beat = true;
+			if (gotInput) {
+				lastLegitInputTime = vvvvvv->getPlayPosition();
+			}
+			gotInput = false;
+		}
+		else if (vvvvvv->getPlayPosition() - lastPlayPosition > msPerBeat * 5 / 4) {
+			beat = false;
+			lastPlayPosition = vvvvvv->getPlayPosition() - ((vvvvvv->getPlayPosition() - lastPlayPosition) - msPerBeat);
+		}
 
-	/*if (vvvvvv->getPlayPosition() < 19500) {
-	// 0.75-2 scaling
-	if (scaleMultiplier >= 2) {
-	increasing = 0;
+		if (beat) {
+			scaleMultiplier = 2.0;
+		}
+		else {
+			scaleMultiplier -= 0.005*deltaTime;
+		}
 	}
-	else if (scaleMultiplier <= 0.5) {
-	increasing = 1;
-	}
-
-	if (increasing) {
-	scaleMultiplier += 0.0045*deltaTime;
-	}
-	else {
-	scaleMultiplier -= 0.0045*deltaTime;
-	}
-	}*/
-	/*else {
-	// 0.75-2 scaling
-	if (scaleMultiplier >= 2) {
-	increasing = 0;
-	}
-	else if (scaleMultiplier <= 0.5) {
-	increasing = 1;
-	}
-
-	//VVVVVV icin
-	//if (increasing) {
-	//	scaleMultiplier += 0.001989*deltaTime;
-	//}
-	//else {
-	//	scaleMultiplier -= 0.001989*deltaTime;
-	//}
-
-	//00xx00 icin
-	if (increasing) {
-	scaleMultiplier += 0.01*deltaTime;
-	}
-	else {
-	scaleMultiplier -= 0.01*deltaTime;
-	}
-
-	//Paced Energy icin
-	//if (increasing) {
-	//	scaleMultiplier += 0.002675*deltaTime;
-	//}
-	//else {
-	//	scaleMultiplier -= 0.002675*deltaTime;
-	//}
-	}*/
 
 	mat4 scalingMat = generateScaleMatrix(scaleMultiplier);
 	mat4 translationMat = generateTranslationMatrix(cubePosition.x, cubePosition.y, cubePosition.z);
-	mat4 translationMat2 = generateTranslationMatrix(0, -6, 0);
+	mat4 translationMat2 = generateTranslationMatrix(0, -6, 3);
 	mat4 rotationMat = generateRotationMatrix(100, -2, 28);
 	point4 metronomeCubeVertices[8] = {
 		translationMat2*translationMat*rotationMat*scalingMat*point4(-0.5, -0.5,  0.5, 1.0),
@@ -611,12 +565,11 @@ void updateMetronomeCube() {
 		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5,  0.5, -0.5, 1.0),
 		translationMat2*translationMat*rotationMat*scalingMat*point4(0.5, -0.5, -0.5, 1.0)
 	};
-	/*platformIndex[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = Index;
-	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = type;*/
 
 	point4 * metronomeCubeVPointer = metronomeCubeVertices;
 	cubicUpdater(metronomeCubeVPointer, indexBeforeMetronome);
 }
+
 int surfaceBeforeIndex;
 vec4 surfaceVertices[4] = { generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(-0.5,  0.0,  0.5, 1.0),
 generateTranslationMatrix(0,-30,0)*generateRotationMatrix(0,20,0)*generateScaleMatrix(1000.0)*point4(0.5,  0.0,  0.5, 1.0),
@@ -724,20 +677,23 @@ int logoIndex;
 int logoCount;
 
 bool drawLogo = true;
-bool musicStarted = false;
+
 void startMusic() {
-	if (musicStarted == false)
+	if (musicIntro == false)
 	{
-		vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, true);
+		vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, false);
 		vvvvvv->setPlayPosition(500);
-		if (vvvvvv)
-			fx = vvvvvv->getSoundEffectControl();
-		if (!fx)
-		{
-			// some sound devices do not support sound effects.
-			printf("This device or sound does not support sound effects.\n");
-		}
-		musicStarted = true;
+		musicIntro = true;
+	}
+}
+
+bool menuPlaying = false;
+void startMenuMusic() {
+	if (menuPlaying == false)
+	{
+		menuMusic = engine->play2D("tall_ships.mp3", true, false, true, irrklang::ESM_AUTO_DETECT, false);
+		menuMusic->setVolume(0.5);
+		menuPlaying = true;
 	}
 }
 
@@ -754,7 +710,7 @@ init()
 	playerCubeIndex = 0;
 	if (!engine)printf("could not start engine"); // 
 												  //setStartLevel();
-	
+	startMenuMusic();
 	addPlatformPiece(0, 0, 1);	
 	addMetronomeCube();
 	bb8Index = points.size();
@@ -1468,6 +1424,7 @@ HandleMusicSequence() {
 			if (!dangerSoundPlayed)
 			{
 				engine->play2D("Danger.wav");
+				menuMusic->stop();
 				dangerSoundPlayed = true;
 			}
 			if (light_multiplier > 0.10)
@@ -1765,21 +1722,22 @@ HandleShowScoreHeight() {
 
 void calculateScore() {
 	int timeSpent = vvvvvv->getPlayPosition() - lastLegitInputTime;
-	fScore += (((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0005 + 0.25)*deltaTime*0.1;
+	//Add 51 points each second in perfect condition
+	//fScore += (((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0005 + 0.1 + 0.01*comboCounter)*deltaTime*0.1;
+	fScore += (((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0005 + 0.10)*deltaTime*0.1;
 	if (fScore < 0.0) {
 		fScore = 0.0;
 	}
 	iScore = fScore;
 	printf("Score float: %f\t Score int: %d\n ", fScore, iScore);
-}
-bool menuInitialized = false;
+}bool menuInitialized = false;
 void
 InitMenu() {
 	if (!menuInitialized)
 	{
 		if (scoreShownState == 0)
 		{
-			importLevel("menuLevel.txt");
+			importLevel("menuLevel.ymp");
 			menuInitialized = true;
 			updateBuffers();
 		}
@@ -1882,10 +1840,15 @@ display(void)
 	HighlightingPath();
 	HandleHighlightedPanels();
 	drawPlatforms();
+	updateMetronomeCube();
+	if (musicIntro) {
+		if (vvvvvv->getPlayPosition() >= 500 + 600 * 16) {
+			musicStarted = true;
+		}
+		drawMetronomeCube();
+	}
 	if (musicStarted) {
 		calculateScore();
-		updateMetronomeCube();
-		drawMetronomeCube();
 	}
 	float multiplier = 180;
 	if (trooperExist) {
@@ -1897,13 +1860,16 @@ display(void)
 		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, r);
 	}
 
+	temp_light_multiplier = light_multiplier;
 
 	/*DrawHighlightPath();*/
 	DrawCities();
+	light_multiplier = 2.0f;
+	updateLightProperties(vec4(1, 0, 0.501, 1.0));
 	if (drawLogo == true)
 	{
-		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(110.0, 0.0, -350.0) * generateRotationMatrix(logo_Rotation[0] * multiplier, logo_Rotation[1] * multiplier, logo_Rotation[2] * multiplier) * generateTranslationMatrix(-110.0, 0.0, 350.0));
-		updateLightProperties(vec4(1, 0, 0.501, 1.0));
+		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(0, offsetForSwapping, 0)*generateTranslationMatrix(110.0, 0.0, -350.0) * generateRotationMatrix(logo_Rotation[0] * multiplier, logo_Rotation[1] * multiplier, logo_Rotation[2] * multiplier) * generateTranslationMatrix(-110.0, 0.0, 350.0));
+
 		glDrawArrays(GL_TRIANGLES, logoIndex, logoCount);
 	}
 	else
@@ -1911,6 +1877,7 @@ display(void)
 		//glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(50, 0, -350) * generateRotationMatrix(logo_Rotation[0] * multiplier, logo_Rotation[1] * multiplier, logo_Rotation[2] * multiplier) * generateTranslationMatrix(-50, 0, +350));
 		DrawScore();
 	}
+	light_multiplier = temp_light_multiplier;
 	r = generateRotationMatrix(0, 0, 0);
 	glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, r);
 
@@ -2075,11 +2042,15 @@ void TW_CALL trooperTrigger(void * /*clientData*/)
 void TW_CALL newPlatform(void * /*clientData*/)
 {
 
-	addPlatformPiece(new_platform_x, new_platform_y,new_platform_type);
+	addPlatformPiece(new_platform_x, new_platform_y, 1);
 	updateBuffers();
 }
 
-
+void TW_CALL removePlatform(void * /*clientData*/)
+{
+	RemovePlatformPiece(new_platform_x, new_platform_y);
+	updateBuffers();
+}
 void TW_CALL Reset(void * /*clientData*/)
 {
 	light_info[0] = 1.31;
@@ -2275,10 +2246,10 @@ main(int argc, char **argv)
 	TwAddButton(bar, "Trooper", trooperTrigger, NULL, " label='Trooper' help='Toogle trooper.' ");
 	TwAddSeparator(bar, "sep1", NULL);
 
-	TwAddVarRW(bar, "X", TW_TYPE_INT32, &new_platform_x, "label='Platform X' group='Platform' ");
+	TwAddVarRW(bar, "X", TW_TYPE_INT32, &new_platform_x, "label='Platform X'  group='Platform' ");
 	TwAddVarRW(bar, "Y", TW_TYPE_INT32, &new_platform_y, "label='Platform Y' group='Platform' ");
-	TwAddVarRW(bar, "Type", TW_TYPE_INT32, &new_platform_type, "label='Platform Type' group='Platform' ");
-	TwAddButton(bar, "NewPlatform", newPlatform, NULL, " group='Platform' min=1 max=4  label='Add Platform' help='Adds new platform to given parameters.' ");
+	TwAddButton(bar, "NewPlatform", newPlatform, NULL, " group='Platform' label='Add Platform' help='Adds new platform to given parameters.' ");
+	TwAddButton(bar, "RemovePlatform", removePlatform, NULL, " group='Platform' label='Remove Platform' help='Deletes the platform with the given parameters.' ");
 
 
 	glutMainLoop();
