@@ -22,7 +22,11 @@ typedef Angel::vec4  point4;															//							|\|  | /|     \__  |   |____
 int window_id;																			//							|       |      \____   |/ __ \\     \___|  |  / \_\ \  ___/          |
 float time;																				//							|       |      / ______(____  /\______  /____/|___  /\___  >         |
 int rotatedAngle = 0;																	//							|		|															 |
-float cubeRotationSpeed = 5; //default 5												//							|       |      \/           \/        \/          \/     \/          |
+float cubeRotationSpeed = 7; //default 5	
+float highlightPathSpeed = 0.5;
+float highlightLevitationSpeed = 0.0009 * highlightPathSpeed;
+float pathHighlightDelay = 250 / highlightPathSpeed;
+//							|       |      \/           \/        \/          \/     \/          |
 vec3 playerCubePos = (0, 0, 0);															//							|       |                                                            |
 																						// Projection transformation parameters													//							|       |                                                           /
 																						//							|       |----------------------------------------------------------'
@@ -54,7 +58,9 @@ bool playerMovementLockToggle = false;
 bool mouseLocker = true;
 
 float light_multiplier = 1.0f;
-float light_info[4] = { 1.31, -11.52, -14.69,1.0 };
+float light_multiplier2 = 1.0f;
+
+float light_info[4] = { 1.31, -11.52, -14.69,0.0 };
 float light_ambient_info[3] = { 0.2, 0.2, 0.2 };
 float light_specular_info[3] = { 1.0, 1.0, 1.0 };
 float light_diffuse_info[3] = {1.0, 1.0, 1.0 };
@@ -247,8 +253,11 @@ GLuint ambientProduct;
 GLuint diffuseProduct;
 GLuint specularProduct;
 GLuint lightPosition;
+GLuint ambientProduct_2;
+GLuint diffuseProduct_2;
+GLuint specularProduct_2;
+GLuint lightPosition_2;
 GLuint shininess;
-
 //----------------------------------------------------------------------------
 
 mat4
@@ -291,6 +300,7 @@ addPlatformPiece(int gameGridX, int gameGridY, int type)
 
 	float levitationSpeed = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 	levitationSpeed = fmod(levitationSpeed, 0.25) + 0.25;
+
 	platformLevitationSpeed[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = levitationSpeed;
 
 	point4 * platformPieceVPointer = platformPieceVertices;
@@ -458,21 +468,50 @@ int lastPlayPosition = 500; //time of the starting beat of the song in ms
 int lastLegitInputTime = lastPlayPosition;
 bool beat = false;
 int bpm = 100; //bpm of the song
+bool highlight3StepsAhead = false;
+void HighlightingPathAccordingtoMove();
 void updateMetronomeCube() {
 	//Fareye gore hareketini iyilestirmek icin biseyler yapmak lazim burda
 	cubePosition = position + 2 * (position - cubePosition)*direction;
 
+	if (vvvvvv->getPlayPosition() >= 17300) {  // 0xx00 speed up at 20.00 second
+		bpm = 20;
+	}
+
+	if (vvvvvv->getPlayPosition() >= 19700) {  // 0xx00 speed up at 20.00 second
+		bpm = 200; highlight3StepsAhead = true; HighlightingPathAccordingtoMove();
+		cubeRotationSpeed = 10;
+	}
+
+	if (vvvvvv->getPlayPosition() >= 38600) {  // 0xx00 speed up at 20.00 second
+		bpm = 100; highlight3StepsAhead = false;
+		cubeRotationSpeed = 7;
+	}
+
+	if (vvvvvv->getPlayPosition() >= 86900) {  // 0xx00 speed up at 20.00 second
+		bpm = 200; highlight3StepsAhead = true; HighlightingPathAccordingtoMove();
+		cubeRotationSpeed = 10;
+	}
+
+	if (vvvvvv->getPlayPosition() >= 105900) {  // 0xx00 speed up at 20.00 second
+		bpm = 100; highlight3StepsAhead = false;
+		cubeRotationSpeed = 7;
+	}
+
+	if (vvvvvv->getPlayPosition() >= 105900 + 600 * 64) {  // 0xx00 speed up at 20.00 second
+		bpm = 200; highlight3StepsAhead = true; HighlightingPathAccordingtoMove();
+		cubeRotationSpeed = 10;
+	}
+
 	int msPerBeat = 60000 / bpm;
+
 	//To loop the song
 	if (vvvvvv->getPlayLength() <= vvvvvv->getPlayPosition() + msPerBeat * 3) {
 		vvvvvv->setPlayPosition(500);
 		lastPlayPosition = 500;
+		cubeRotationSpeed = 7;
+		bpm = 100;
 		bool beat = false;
-	}
-
-	if (vvvvvv->getPlayPosition() >= 16500) {  // 0xx00 speed up at 20.00 second
-	bpm = 200;
-	cubeRotationSpeed = 10;
 	}
 
 	if (vvvvvv->getPlayPosition() - lastLegitInputTime > msPerBeat * 3 / 2) {
@@ -684,7 +723,6 @@ bool musicStarted = false;
 void startMusic() {
 	if (musicStarted == false)
 	{
-		drawLogo = false;
 		vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, true);
 		vvvvvv->setPlayPosition(500);
 		if (vvvvvv)
@@ -712,7 +750,7 @@ init()
 	if (!engine)printf("could not start engine"); // 
 												  //setStartLevel();
 	
-	addPlatformPiece(0, 0, 1);											  /*importLevel("level1.txt");*/
+	addPlatformPiece(0, 0, 1);	
 	addMetronomeCube();
 	bb8Index = points.size();
 	bb8VCount = importFromOBJ("Stormtrooper.obj", generateScaleMatrix(1), generateRotationMatrix(0, -25, 0), generateTranslationMatrix(10, 0, 0), true);
@@ -796,6 +834,10 @@ initializeUniformVariables(GLuint program) {
 	diffuseProduct = glGetUniformLocation(program, "DiffuseProduct");
 	specularProduct = glGetUniformLocation(program, "SpecularProduct");
 	lightPosition = glGetUniformLocation(program, "LightPosition");
+	ambientProduct_2 = glGetUniformLocation(program, "AmbientProduct2");
+	diffuseProduct_2 = glGetUniformLocation(program, "DiffuseProduct2");
+	specularProduct_2 = glGetUniformLocation(program, "SpecularProduct2");
+	lightPosition_2 = glGetUniformLocation(program, "LightPosition2");
 	shininess = glGetUniformLocation(program, "Shininess");
 	model_view = glGetUniformLocation(program, "model_view");
 	normal_matrix = glGetUniformLocation(program, "normal_matrix");
@@ -884,7 +926,8 @@ updateLightProperties(color4 baseObjectColor)
 	light_ambient = light_ambient * light_multiplier; light_ambient[3] = 1.0;
 	light_diffuse = light_diffuse * light_multiplier; light_diffuse[3] = 1.0;
 	light_specular = light_specular * light_multiplier; light_specular[3] = 1.0;
-	color4 material_ambient(1.0, 1.0, 1.0, 1.0);
+
+	color4 material_ambient(0.5, 0.5, 0.5, 1.0);
 	color4 material_diffuse = baseObjectColor;
 	color4 material_specular = baseObjectColor;
 	float  material_shininess = 50.0;
@@ -893,11 +936,26 @@ updateLightProperties(color4 baseObjectColor)
 	color4 diffuse_product = light_diffuse * material_diffuse;
 	color4 specular_product = light_specular * material_specular;
 
+	point4 centerOfPlayerCube =
+		(points[5] +
+		points[14])/2;
+	point4 light_position_2 = centerOfPlayerCube;
+
+	color4 ambient_product_2 = color4(0, 0.0, 0, 0) * material_ambient;
+	color4 diffuse_product_2 = currentCubeColor* light_multiplier * material_diffuse;
+	color4 specular_product_2 = color4(0, 0.0, 0, 0) * material_specular;
+
 	glUniform4fv(ambientProduct, 1, ambient_product);
 	glUniform4fv(diffuseProduct, 1, diffuse_product);
 	glUniform4fv(specularProduct, 1, specular_product);
 
+	glUniform4fv(ambientProduct_2, 1, ambient_product_2);
+	glUniform4fv(diffuseProduct_2, 1, diffuse_product_2);
+	glUniform4fv(specularProduct_2, 1, specular_product_2);
+
 	glUniform4fv(lightPosition, 1, light_position);
+	glUniform4fv(lightPosition_2, 1, light_position_2);
+
 
 	glUniform1f(shininess, material_shininess);
 
@@ -1050,6 +1108,12 @@ drawMetronomeCube()
 	glDrawArrays(GL_TRIANGLES, indexBeforeMetronome, 36);
 }
 
+
+int comboCounter = 0;
+bool tutorialComplete = false;
+bool playerFollowingPath = false;
+int startMusicSequenceState = 0;
+void HighlightingPathAccordingtoMove();
 void
 MoveCube()
 {
@@ -1094,6 +1158,43 @@ MoveCube()
 			playerCubeMoveDirection = 'n';
 			rotatedAngle = 0;
 			engine->play2D("hit.wav");
+
+			if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 7)
+			{
+				playerFollowingPath = true;
+			}
+			if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] != 7)
+			{
+				playerFollowingPath = false;
+			}
+			if (tutorialComplete)
+			{
+				if (playerFollowingPath)
+				{
+					HighlightingPathAccordingtoMove();
+				}
+			}
+			if (!tutorialComplete)
+			{
+				if (playerFollowingPath)
+				{
+					switch (comboCounter) {
+					case 0: engine->play2D("Combo1.wav"); break;
+					case 1: engine->play2D("Combo2.wav"); break;
+					case 2: engine->play2D("Combo3.wav"); break;
+					case 3: engine->play2D("Combo4.wav"); break;
+					case 4: engine->play2D("Combo5.wav"); break;
+					case 5: engine->play2D("Combo6.wav"); tutorialComplete = true; startMusicSequenceState = 1; break;
+					}
+					comboCounter++;
+				}
+				else
+				{
+					comboCounter = 0;
+				}
+			}
+
+
 		}
 	}
 }
@@ -1215,8 +1316,8 @@ InitializeLevel1()
 			CleanRemovedPlatformTypes();
 			platformType[2 + sceneSize / 2][0 + sceneSize / 2] = 1;
 
-			addPlatformPiece(-2, -3, 1);	addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1); addPlatformPiece(6, -3, 1);
-			addPlatformPiece(-2, -2, 1);	addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1); addPlatformPiece(6, -2, 1);
+			addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1); 
+			addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1); 
 			addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);
 			addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 8);	addPlatformPiece(1, 0, 1);/*addPlatformPiece(2, 0, 1);*/addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);  addPlatformPiece(5, 0, 1);
 			addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1);
@@ -1226,6 +1327,19 @@ InitializeLevel1()
 		}
 		return;
 	}
+}
+void
+ExpandLevel1() {
+	addPlatformPiece(-3, -5, 1);	addPlatformPiece(-2, -5, 1);	addPlatformPiece(-1, -5, 1);	addPlatformPiece(0, -5, 1); addPlatformPiece(1, -5, 1);	addPlatformPiece(2, -5, 1);	addPlatformPiece(3, -5, 1);  addPlatformPiece(4, -5, 1);		addPlatformPiece(5, -5, 1);		addPlatformPiece(6, -5, 1);	addPlatformPiece(7, -5, 1);
+	addPlatformPiece(-3, -4, 1);	addPlatformPiece(-2, -4, 1);	addPlatformPiece(-1, -4, 1);	addPlatformPiece(0, -4, 1); addPlatformPiece(1, -4, 1);	addPlatformPiece(2, -4, 1);	addPlatformPiece(3, -4, 1);  addPlatformPiece(4, -4, 1);		addPlatformPiece(5, -4, 1);		addPlatformPiece(6, -4, 1); addPlatformPiece(7, -4, 1);
+	addPlatformPiece(-3, -3, 1);	addPlatformPiece(-2, -3, 1);/*addPlatformPiece(-1, -3, 1); addPlatformPiece(0, -3, 1); addPlatformPiece(1, -3, 1); addPlatformPiece(2, -3, 1);	addPlatformPiece(3, -3, 1); addPlatformPiece(4, -3, 1); addPlatformPiece(5, -3, 1);*/		addPlatformPiece(6, -3, 1); addPlatformPiece(7, -3, 1);
+	addPlatformPiece(-3, -2, 1);	addPlatformPiece(-2, -2, 1);/*addPlatformPiece(-1, -2, 1); addPlatformPiece(0, -2, 1); addPlatformPiece(1, -2, 1); addPlatformPiece(2, -2, 1);	addPlatformPiece(3, -2, 1); addPlatformPiece(4, -2, 1); addPlatformPiece(5, -2, 1);*/		addPlatformPiece(6, -2, 1); addPlatformPiece(7, -2, 1);
+	addPlatformPiece(-3, -1, 1);	addPlatformPiece(-2, -1, 1);/*addPlatformPiece(-1, -1, 1); addPlatformPiece(0, -1, 1); addPlatformPiece(1, -1, 1); addPlatformPiece(2, -1, 1);	addPlatformPiece(3, -1, 1); addPlatformPiece(4, -1, 1); addPlatformPiece(5, -1, 1);*/		addPlatformPiece(6, -1, 1); addPlatformPiece(7, -1, 1);
+	addPlatformPiece(-3, 0, 1);		addPlatformPiece(-2, 0, 1);	/*addPlatformPiece(-1, 0, 1);	addPlatformPiece(0, 0, 8);	addPlatformPiece(1, 0, 1);addPlatformPiece(2, 0, 1);addPlatformPiece(3, 0, 1);	addPlatformPiece(4, 0, 1);		 addPlatformPiece(5, 0, 1);*/		addPlatformPiece(6, 0, 1);  addPlatformPiece(7, 0, 1);
+	addPlatformPiece(-3, 1, 1);		addPlatformPiece(-2, 1, 1);	/*addPlatformPiece(-1, 1, 1);	addPlatformPiece(0, 1, 1);	addPlatformPiece(1, 1, 1); addPlatformPiece(2, 1, 1);	addPlatformPiece(3, 1, 1);	addPlatformPiece(4, 1, 1);  addPlatformPiece(5, 1, 1); */		addPlatformPiece(6, 1, 1);  addPlatformPiece(7, 1, 1);
+	addPlatformPiece(-3, 2, 1);		addPlatformPiece(-2, 2, 1);	addPlatformPiece(-1, 2, 1);	addPlatformPiece(0, 2, 1); addPlatformPiece(1, 2, 1);	addPlatformPiece(2, 2, 1);	addPlatformPiece(3, 2, 1);  addPlatformPiece(4, 2, 1);		addPlatformPiece(5, 2, 1);			addPlatformPiece(6, 2, 1);	addPlatformPiece(7, 2, 1);
+	addPlatformPiece(-3, 3, 1);		addPlatformPiece(-2, 3, 1);	addPlatformPiece(-1, 3, 1);	addPlatformPiece(0, 3, 1); addPlatformPiece(1, 3, 1);	addPlatformPiece(2, 3, 1);	addPlatformPiece(3, 3, 1);  addPlatformPiece(4, 3, 1);		addPlatformPiece(5, 3, 1);			addPlatformPiece(6, 3, 1);	addPlatformPiece(7, 3, 1);
+
 }
 
 void
@@ -1296,58 +1410,6 @@ TurnCameraRight()
 		}
 	}
 }
-int addX = 0, addY = 0;
-int lastHighlightedPanel = 0;
-int tutorialPath[6] = { 8,8,6,6,5,6 };
-bool pathHiglighting;
-//void
-//HighlightPath(int path[6])
-//{
-//
-//	if (addX != 0 && addY != 0)
-//	{
-//		platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 1;
-//	}
-//
-//	switch (path[lastHighlightedPanel]) {
-//	case 4: addX += -1; addY += 0; break;
-//	case 8: addX += 0;	addY += -1;  break;
-//	case 6: addX += 1;	addY += 0;  break;
-//	case 5: addX += 0;	addY += 1;  break;
-//	}
-//		
-//	platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 7;
-//	lastHighlightedPanel++;
-//	if (lastHighlightedPanel == 6)
-//	{
-//		lastHighlightedPanel = 0;
-//		addX = 0, addY = 0;
-//	}
-//}
-//void
-//DrawHighlightPath(int path[6])
-//{
-//
-//	if (addX != 0 && addY != 0)
-//	{
-//		platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 1;
-//	}
-//
-//	switch (path[lastHighlightedPanel]) {
-//	case 4: addX += -1; addY += 0; break;
-//	case 8: addX += 0;	addY += -1;  break;
-//	case 6: addX += 1;	addY += 0;  break;
-//	case 5: addX += 0;	addY += 1;  break;
-//	}
-//
-//	platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 7;
-//	lastHighlightedPanel++;
-//	if (lastHighlightedPanel == 6)
-//	{
-//		lastHighlightedPanel = 0;
-//		addX = 0, addY = 0;
-//	}
-//}
 void
 HighlightPanel(int i, int j) {
 	i = i + sceneSize / 2; j = j + sceneSize / 2;
@@ -1357,6 +1419,193 @@ HighlightPanel(int i, int j) {
 		platformHiglightTicker[i][j] = 1;
 	}
 }
+
+int panelToHighlight = 0;
+vector<int> tutorialPath = { 8,8,6,6,5,6 };
+int highlightState = 0;
+int addX = 0, addY = 0;
+float pathHighlightTicker = 0;
+
+void
+HighlightTutorialPath() {
+	if (highlightState == 0)
+	{
+		addX = (int)playerCubePos.x;
+		addY = (int)playerCubePos.y;
+		highlightState = 1;
+	}
+	/*platformType[(int)playerCubePos.x + addX + sceneSize / 2][(int)playerCubePos.y + addY + sceneSize / 2] = 1;*/
+}
+
+int timeTicker = 0;
+int dangerSoundTick = 1500; bool dangerSoundPlayed = false;
+int songStartTick = 3000;
+int scoreUpTick = 6500;
+int lightsTick1 = 10200;
+int lightsTick2 = 10500;
+int lightsTick3 = 10550;
+int startHighlightTick = 10950; bool level1Expanded = false;
+
+float offsetForSwapping = 0; int addXm = 0, addYm = 0;
+void
+HandleMusicSequence() {
+	if (startMusicSequenceState == 0)
+	{
+		return;
+	}
+
+	if (startMusicSequenceState == 1)
+	{
+		playerMovementLockToggle = false; // lock player during cutscene
+		timeTicker += deltaTime * 1;
+		if (timeTicker >= dangerSoundTick && timeTicker < songStartTick)
+		{
+			if (!dangerSoundPlayed)
+			{
+				engine->play2D("Danger.wav");
+				dangerSoundPlayed = true;
+			}
+			if (light_multiplier > 0.10)
+			{
+				light_multiplier -= deltaTime * 0.004;
+				if (light_multiplier < 0.10)
+				{
+					light_multiplier = 0.10;
+				}
+			}
+			
+			/*pathHighlightTicker = 0;*/
+		}
+		if (timeTicker >= songStartTick && timeTicker < scoreUpTick)
+		{
+			platformType[25][25] = 1;
+			/*glClearColor(1.0,0.0,0.0,1.0);*/
+			startMusic();
+			offsetForSwapping -= deltaTime * 0.02;
+			/*pathHighlightTicker = 0;*/
+		}
+		if (timeTicker >= scoreUpTick && timeTicker < lightsTick1)
+		{
+			drawLogo = false;
+			if (offsetForSwapping < 0)
+			{
+				offsetForSwapping += deltaTime * 0.02;
+				if (offsetForSwapping > 0.0)
+				{
+					offsetForSwapping = 0.0;
+				}
+			}
+			if (!level1Expanded)
+			{
+				ExpandLevel1();
+				updateBuffers();
+				level1Expanded = true;
+			}
+
+		}		
+		if (timeTicker >= lightsTick1 && timeTicker < lightsTick2)
+		{
+			light_multiplier = 1.0;
+		}
+		if (timeTicker >= lightsTick2 && timeTicker < lightsTick3)
+		{
+			light_multiplier = 0.1;
+		}		
+		if (timeTicker >= lightsTick3 && timeTicker < startHighlightTick)
+		{
+			light_multiplier = 1.0;
+		}
+		if (timeTicker >= startHighlightTick)
+		{
+			addXm = (int)playerCubePos.x; addYm = (int)playerCubePos.y-1;
+			HighlightingPathAccordingtoMove();
+			playerMovementLockToggle = false;
+			startMusicSequenceState = 0;
+		}
+	}
+}
+vector<int> musicPath = { 4,4,4,5,6,6,8,4,5,6,5,4,8,6,5,6,8,4,5,6,8,4,5,4,8,6,5,4,8,6,5,4,8 };
+
+
+int
+RandomDirection(int addXt, int addYt) {
+	int randomCase = 0;
+	randomCase = timeSinceStart % 4;
+	do
+	{
+		randomCase = (randomCase + 1) % 4;
+		switch (randomCase) {
+		case 0: addXt += -1; addYt += 0; break;
+		case 1: addXt += 0;	addYt += -1;  break;
+		case 2: addXt += 1;	addYt += 0;  break;
+		case 3: addXt += 0;	addYt += 1;  break;
+		}
+	} while (platformType[addXt + sceneSize / 2][addYt + sceneSize / 2] == 0);
+	return randomCase;
+}
+bool RandomPath = true;
+void
+HighlightingPathAccordingtoMove() {
+	if (!RandomPath)
+	{
+		switch (musicPath[panelToHighlight]) {
+		case 4: addXm += -1;addYm += 0; break;
+		case 8: addXm += 0;	addYm+= -1;  break;
+		case 6: addXm += 1;	addYm+= 0;  break;
+		case 5: addXm += 0;	addYm+= 1;  break;
+		}
+		HighlightPanel(addXm, addYm);
+
+		panelToHighlight++;
+		if (panelToHighlight == musicPath.size())
+		{
+			panelToHighlight = 0;
+			addXm = 0, addYm = 0;
+		}
+	}
+
+	else
+	{
+		int direction = RandomDirection(addXm, addYm);
+		switch (direction) {
+		case 0: addXm += -1; addYm += 0; break;
+		case 1: addXm += 0;	addYm += -1;  break;
+		case 2: addXm += 1;	addYm += 0;  break;
+		case 3: addXm += 0;	addYm += 1;  break;
+		}
+
+		HighlightPanel(addXm, addYm);
+	}
+}
+
+void
+HighlightingPath() {
+
+	if (highlightState == 1)
+	{
+		pathHighlightTicker += deltaTime * 1;
+		if (pathHighlightTicker >= pathHighlightDelay)
+		{
+			switch (tutorialPath[panelToHighlight]) {
+			case 4: addX += -1; addY += 0; break;
+			case 8: addX += 0;	addY += -1;  break;
+			case 6: addX += 1;	addY += 0;  break;
+			case 5: addX += 0;	addY += 1;  break;
+			}
+			HighlightPanel(addX,addY);
+			
+			panelToHighlight++;
+			if (panelToHighlight == tutorialPath.size())
+			{
+				panelToHighlight = 0;
+				addX = 0, addY = 0;
+				highlightState = 0;
+			}
+			pathHighlightTicker = 0;
+		}
+	}
+}
+
 void
 HandleHighlightedPanels()
 {
@@ -1366,7 +1615,7 @@ HandleHighlightedPanels()
 		{
 			if (platformType[i][j] == 7)
 			{
-				float levitationDiff = 0.01 * deltaTime / 20;
+				float levitationDiff = highlightLevitationSpeed * deltaTime;
 				int platformBufferIndex = platformIndex[i][j];
 				mat4 platformTranslationMatrix;
 				float levitateUpperLimit = (-0.6);
@@ -1375,6 +1624,10 @@ HandleHighlightedPanels()
 				{
 					float offset = levitateUpperLimit - (points[platformBufferIndex + 1].y + levitationDiff);
 					levitationDiff += offset;
+					if ((points[platformBufferIndex + 1].y + levitationDiff) >= (-0.7) && highlight3StepsAhead)
+					{
+						HighlightingPathAccordingtoMove();
+					}
 					platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
 					platformHiglightTicker[i][j] = 2;
 				}
@@ -1451,10 +1704,10 @@ DrawScore()
 	for (int place = 0; place < 4; place++) {
 		int digit = score % 10;
 		switch (place) {
-		case 0:	t = generateTranslationMatrix(scaleXOffset +150, 8, -350);	 break;
-		case 1:	t = generateTranslationMatrix(scaleXOffset +100, 8, -350);	 break;
-		case 2:	t = generateTranslationMatrix(scaleXOffset +50, 8, -350);	 break;
-		case 3:	t = generateTranslationMatrix(scaleXOffset, 8, -350);	 break;
+		case 0:	t = generateTranslationMatrix(scaleXOffset +150, 8 + offsetForSwapping, -350);	 break;
+		case 1:	t = generateTranslationMatrix(scaleXOffset +100, 8 + offsetForSwapping, -350);	 break;
+		case 2:	t = generateTranslationMatrix(scaleXOffset +50, 8 + offsetForSwapping, -350);	 break;
+		case 3:	t = generateTranslationMatrix(scaleXOffset, 8 + offsetForSwapping, -350);	 break;
 		}
 		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, t*r*s);
 		switch (digit) {
@@ -1503,6 +1756,35 @@ HandleShowScoreHeight() {
 	}
 
 }
+
+void calculateScore() {
+	int timeSpent = vvvvvv->getPlayPosition() - lastLegitInputTime;
+	fScore += (((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0005 + 0.25)*deltaTime*0.1;
+	if (fScore < 0.0) {
+		fScore = 0.0;
+	}
+	iScore = fScore;
+	printf("Score float: %f\t Score int: %d\n ", fScore, iScore);
+}
+bool menuInitialized = false;
+void
+InitMenu() {
+	if (!menuInitialized)
+	{
+		if (scoreShownState == 0)
+		{
+			importLevel("menuLevel.txt");
+			menuInitialized = true;
+			updateBuffers();
+		}
+	}
+	else
+	{
+		return;
+	}
+}
+
+
 void
 DecideCurrentPlatformAction()
 {
@@ -1512,7 +1794,7 @@ DecideCurrentPlatformAction()
 	}
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 8)
 	{
-		HighlightPanel(2, -1);  startMusic();
+		HighlightTutorialPath(); /* HighlightPanel(2, -1);  startMusic();*/
 	}
 	if (platformType[(int)playerCubePos.x + sceneSize / 2][(int)playerCubePos.z + sceneSize / 2] == 6)
 	{
@@ -1543,38 +1825,13 @@ DecideCurrentPlatformAction()
 		MoveCube();
 	}
 }
-void calculateScore() {
-	int timeSpent = vvvvvv->getPlayPosition() - lastLegitInputTime;
-	fScore += (((metronomeCubeColor.y - metronomeCubeColor.x) * timeSpent)*0.0005 + 0.25)*deltaTime*0.1;
-	if (fScore < 0.0) {
-		fScore = 0.0;
-	}
-	iScore = fScore;
-	printf("Score float: %f\t Score int: %d\n ", fScore, iScore);
-}
-bool menuInitialized = false;
-void
-InitMenu() {
-	if (!menuInitialized)
-	{
-		if (scoreShownState == 0)
-		{
-			importLevel("menuLevel.txt");
-			menuInitialized = true;
-			updateBuffers();
-		}
-	}
-	else
-	{
-		return;
-	}
-}
 //----------------------------------------------------------------------------
 void
 display(void)
 {
 	InitMenu();
 	HandleShowScoreHeight();
+	HandleMusicSequence();
 	CalculateDeltaTime();
 
 	DecideCurrentPlatformAction();
@@ -1616,6 +1873,7 @@ display(void)
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
+	HighlightingPath();
 	HandleHighlightedPanels();
 	drawPlatforms();
 	if (musicStarted) {
@@ -1638,6 +1896,7 @@ display(void)
 
 	if (drawLogo == true)
 	{
+		glUniformMatrix4fv(trs_matrix, 1, GL_TRUE, generateTranslationMatrix(0, offsetForSwapping,0));
 		updateLightProperties(vec4(1, 0, 0.501,1.0));
 		glDrawArrays(GL_TRIANGLES, logoIndex, logoCount);
 	}
@@ -1695,8 +1954,9 @@ int metronomeCubeHealth() {
 			}
 			else if (metronomeCubeColor.x > 0.99 && metronomeCubeColor.x <= 1.00 && metronomeCubeColor.y >= 0.0 && metronomeCubeColor.y < 0.01) {
 				//Zero health
-				Respawn();
-				return 0;
+				/*Respawn();*/
+				/*return 0;*/
+				
 			}
 			return 2;
 		}
