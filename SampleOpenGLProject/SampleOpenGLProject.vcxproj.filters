@@ -47,6 +47,12 @@
     <ClInclude Include="OpenGL\include\AntTweakBar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OpenGL\include\soil_include\SOIL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL\include\SOIL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SampleOpenGLProject.rc">
@@ -77,6 +83,7 @@
     <Library Include="OpenGL\lib\irrKlang.lib" />
     <Library Include="OpenGL\lib\AntTweakBar.lib" />
     <Library Include="OpenGL\lib\AntTweakBar64.lib" />
+    <Library Include="OpenGL\lib\SOIL.lib" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="menuLevel.txt" />

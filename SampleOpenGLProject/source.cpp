@@ -317,7 +317,16 @@ void
 RemovePlatformPiece(int gameGridX, int gameGridY)
 {
 	platformLeveled[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 2;
+	platformHiglightTicker[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 0;
 }
+void
+RemovePlatformPieceCompletely(int gameGridX, int gameGridY)
+{
+	platformLeveled[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 2;
+	platformType[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 0;
+	platformHiglightTicker[gameGridX + sceneSize / 2][gameGridY + sceneSize / 2] = 0;
+}
+
 
 void
 RemoveAllPlatforms()
@@ -334,7 +343,7 @@ RemoveAllPlatforms()
 				}
 				else
 				{
-					RemovePlatformPiece(i - (sceneSize / 2), j - (sceneSize / 2));
+					RemovePlatformPieceCompletely(i - (sceneSize / 2), j - (sceneSize / 2));
 				}
 			}
 			else
@@ -479,6 +488,9 @@ bool playerFollowingPath = false;
 int bpmSegmentsState = 0;
 bool musicIntro = false;
 bool musicStarted = false;
+bool SongFinished = false;
+void stopMusic();
+void SongFinishedSequence();
 void updateMetronomeCube() {
 	//Fareye gore hareketini iyilestirmek icin biseyler yapmak lazim burda
 	cubePosition = position + 2 * (position - cubePosition)*direction;
@@ -555,11 +567,9 @@ void updateMetronomeCube() {
 
 		//To loop the song
 		if (vvvvvv->getPlayLength() <= vvvvvv->getPlayPosition() + msPerBeat * 3) {
-			vvvvvv->setPlayPosition(500);
-			lastPlayPosition = 500;
-			cubeRotationSpeed = 7;
-			bpm = 100;
-			bool beat = false;
+			stopMusic();
+			SongFinishedSequence();
+			
 		}
 
 		if (vvvvvv->getPlayPosition() - lastLegitInputTime > msPerBeat * 3 / 2) {
@@ -721,6 +731,7 @@ bool drawLogo = true;
 void startMusic() {
 	if (musicIntro == false)
 	{
+		fScore = 0; // lastchange
 		if (vvvvvv == NULL) {
 			vvvvvv = engine->play2D("00xx00.mp3", false, false, true, irrklang::ESM_AUTO_DETECT, false);
 			vvvvvv->setPlayPosition(500);
@@ -963,7 +974,7 @@ updateLightProperties(color4 baseObjectColor)
 	point4 light_position_2 = centerOfPlayerCube;
 
 	color4 ambient_product_2 = color4(0, 0.0, 0, 0) * material_ambient;
-	color4 diffuse_product_2 = currentCubeColor* light_multiplier * material_diffuse;
+	color4 diffuse_product_2 = currentCubeColor * material_diffuse;
 	color4 specular_product_2 = color4(0, 0.0, 0, 0) * material_specular;
 
 	glUniform4fv(ambientProduct, 1, ambient_product);
@@ -1036,7 +1047,25 @@ CleanRemovedPlatformTypes()
 		{
 			if (platformType[i][j] != 0)
 			{
-				if (platformLeveled[i][j] == 1)
+				if (platformLeveled[i][j] == 1 || platformLeveled[i][j] == 3)
+				{
+					platformType[i][j] = 0;
+				}
+			}
+		}
+	}
+}
+
+void
+CleanRemovedPlatformTypesSecure()
+{
+	for (int i = 0; i < sceneSize; i++)
+	{
+		for (int j = 0; j < sceneSize; j++)
+		{
+			if (platformType[i][j] != 0)
+			{
+				if (platformLeveled[i][j] == 3)
 				{
 					platformType[i][j] = 0;
 				}
@@ -1048,7 +1077,7 @@ CleanRemovedPlatformTypes()
 void
 LevitatePlatform(int i, int j)
 {
-	if (platformLeveled[i][j] == 1)
+	if (platformLeveled[i][j] == 1 || platformLeveled[i][j] == 3)
 	{
 		return;
 	}
@@ -1070,7 +1099,15 @@ LevitatePlatform(int i, int j)
 		float offset = levitateUpperLimit - (points[platformBufferIndex + 1].y + levitationDiff);
 		levitationDiff += offset;
 		platformTranslationMatrix = generateTranslationMatrix(0.0, levitationDiff, 0.0);
-		platformLeveled[i][j] = 1;
+		if (levitateUpperLimit == (10.8))
+		{
+			platformLeveled[i][j] = 3;
+		}
+		else
+		{
+			platformLeveled[i][j] = 1;
+		}
+		
 	}
 	else
 	{
@@ -1210,7 +1247,7 @@ MoveCube()
 					case 2: engine->play2D("Combo3.wav"); break;
 					case 3: engine->play2D("Combo4.wav"); break;
 					case 4: engine->play2D("Combo5.wav"); break;
-					case 5: engine->play2D("Combo6.wav"); tutorialComplete = true; startMusicSequenceState = 1; break;
+					case 5: engine->play2D("Combo6.wav"); tutorialComplete = true; startMusicSequenceState = 1; comboCounter = 0; break;
 					}
 					comboCounter++;
 				}
@@ -1580,7 +1617,7 @@ RandomDirection(int addXt, int addYt) {
 			case 2: addXt += 1;	addYt += 0;  break;
 			case 3: addXt += 0;	addYt += 1;  break;
 			}
-		} while (platformType[addXt + sceneSize / 2][addYt + sceneSize / 2] == 0 || randomCase == unwantedDirection);
+		} while (platformType[addXt + sceneSize / 2][addYt + sceneSize / 2] == 0/* || randomCase == unwantedDirection*/);
 		previousDirection = randomCase;
 		return randomCase;
 	}
@@ -1836,7 +1873,7 @@ void calculateScore() {
 		fScore = 0.0;
 	}
 	iScore = fScore;
-	printf("Score float: %f\t Score int: %d\n ", fScore, iScore);
+	/*printf("Score float: %f\t Score int: %d\n ", fScore, iScore);*/
 }bool menuInitialized = false;
 void
 InitMenu() {
@@ -1859,7 +1896,7 @@ void
 DeathSequence() {
 	stopMusic();
 	highlightState = 0;
-	RemoveAllPlatforms(); RemovePlatformPiece(playerCubePos.x, playerCubePos.y);
+	RemoveAllPlatforms(); RemovePlatformPieceCompletely(playerCubePos.x, playerCubePos.y);
 	updateBuffers();
 }
 
@@ -1867,20 +1904,23 @@ void
 SongFinishedSequence() {
 	scoreShownState = 1;
 	addPlatformPiece(0, 0, 9);
+	updateBuffers();
 }
 
 void
 DecideCurrentPlatformAction()
 {
-	if (centerOfPlayerCube.y < -250)
+	if (centerOfPlayerCube.y < -100)
 	{
-		cubeRotationSpeed = 0.7;
+		cubeRotationSpeed = 7;
 		int timeTicker = 0;
 		int panelToHighlight = 0;
 		vector<int> tutorialPath = { 8,8,6,6,5,6 };
 		int highlightState = 0;
+		highlight3StepsAhead = false;
 		int addX = 0, addY = 0;
 		stopMusic();
+		startMusicSequenceState = 0;
 		float pathHighlightTicker = 0;
 		tutorialComplete = false;
 		Respawn();
@@ -2136,11 +2176,12 @@ keyboard(unsigned char key, int x, int y)
 		case 'd': case 'D': if (metronomeCubeHealth() != 2) { break; } if (rotatedAngle == 0 && playerMovementLockToggle == false) { if (turnTicker == false)playerCubeMoveDirection = 'R'; if (turnTicker == true)playerCubeMoveDirection = 'D'; } break;
 		case 'f': case 'F': freecamToggle = !freecamToggle; break;
 		case 'r': case 'R': Respawn(); break;
+		case 'p': case 'P': stopMusic(); SongFinishedSequence(); break;
 		case 'c': case 'C': position = initialPosition; verticalAngle = initialVerticalAngle; horizontalAngle = initialHorizontalAngle; break;
 		case 't': case 'T': if (toonEnable == 0) { toonEnable = 1; }
 				  else if (toonEnable == 1) { toonEnable = 2; }
 				  else if (toonEnable == 2) { toonEnable = 0; } break;
-		case 'p': printf("positionX: %f, positionY: %f,positionZ: %f,horizontalAngle:%f\n verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", position.x, position.y, position.z, horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
+		//case 'p': printf("positionX: %f, positionY: %f,positionZ: %f,horizontalAngle:%f\n verticalAngle:%f, zNear:%f, zFar:%f, radius:%f, theta : %f, phi:%f\n", position.x, position.y, position.z, horizontalAngle, verticalAngle, position.y, position.z, radius, theta, phi); break;
 		}
 	}
 	glutPostRedisplay();
@@ -2191,7 +2232,7 @@ void TW_CALL newPlatform(void * /*clientData*/)
 
 void TW_CALL removePlatform(void * /*clientData*/)
 {
-	RemovePlatformPiece(new_platform_x, new_platform_y);
+	RemovePlatformPieceCompletely(new_platform_x, new_platform_y);
 	updateBuffers();
 }
 void TW_CALL Reset(void * /*clientData*/)
@@ -2346,6 +2387,7 @@ main(int argc, char **argv)
 	glutPassiveMotionFunc(MouseController);
 	glutMouseFunc(mouseClickHandler);
 	glutSetCursor(GLUT_CURSOR_NONE);
+	glutFullScreen();
 	atexit(Terminate);
 
 
@@ -2354,8 +2396,17 @@ main(int argc, char **argv)
 	// Create a tweak bar
 	TwWindowSize(200, 595);
 	bar = TwNewBar("YaCubeUi");
-	TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLUT and OpenGL.' "); // Message added to the help bar.
-	TwDefine(" BurakBar size='200 595' color='255 0 0' "); // change default tweak bar size and 
+	TwDefine(" YaCubeUi iconified=true ");
+
+	TwDefine(" GLOBAL help='Controls: W,A,S,D: player movement				  			R: RespawnLeft											Mouse Button: Show cursor												Middle Mouse Button: Hide cursor													 F: Toggle FreeCam (Mouse should be hidden)													Freecam Controls: Move Camera with arrow keys, look around with mouse.																	 C: Reset Camera Position																T: Switch Toon Shading modes' ");// Message added to the help bar.
+	//TwDefine(" GLOBAL help='	      R: Respawn ' ");
+	//TwDefine(" GLOBAL help='	      Left Mouse Button: Show cursor ' ");
+	//TwDefine(" GLOBAL help='	      Middle Mouse Button: Hide cursor ' ");
+	//TwDefine(" GLOBAL help='	      F: Toggle FreeCam (Mouse should be hidden) ' ");
+	//TwDefine(" GLOBAL help='	      Freecam Controls: Move Camera with arrow keys, look around with mouse. ' ");
+	//TwDefine(" GLOBAL help='	      C: Reset Camera Position ' ");
+	//TwDefine(" GLOBAL help='	      T: Switch Toon Shading Modes ' ");
+	TwDefine(" YaCubeUi size='200 595' color='255 0 0' "); // change default tweak bar size and 
 														   // Add 'g_LightDirection' to 'bar': this is a variable of type TW_TYPE_DIR3F which defines the light direction
 	TwAddVarRW(bar, "LightDir", TW_TYPE_DIR3F, &light_info,
 		" label='Light direction' opened=true help='Change the light direction.' ");
