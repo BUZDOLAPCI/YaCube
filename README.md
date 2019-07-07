@@ -8,4 +8,4 @@ Cem Aslan - https://www.linkedin.com/in/cem-aslan-17a570123/
 
 Mervan Enes Savğa - https://www.linkedin.com/in/mervan-sav%C4%9Fa-240668120/
 
-Rahmi Berk Şefkatli
+Rahmi Berk Şefkatli - https://www.linkedin.com/in/berk-%C5%9Fefkatli-a8812a15b/
